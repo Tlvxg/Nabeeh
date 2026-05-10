@@ -10,13 +10,15 @@ dist/
 dashboard/dist/
 backend/*.egg-info/
 
-# Environment files (contain secrets) — match any *.env file, not just literal .env
-*.env
-*.env.*
+# Environment files (contain secrets) — keep .env.example tracked as templates
 .env
 .env.local
+.env.*.local
 dashboard/.env.local
 backend/.env
+*.env
+!.env.example
+!*.env.example
 
 # Python virtualenv leakage at the project root (pip installed at repo root by mistake)
 /bin/
