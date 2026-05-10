@@ -167,67 +167,95 @@ sequenceDiagram
     BE-->>FE: reply
 ```
 
+### How to read the diagram
+
+A few quick conventions before the step-by-step:
+
+- **Solid arrow (`→`)**: one component is calling another, sending data or asking for something.
+- **Dashed arrow (`-->`)**: the reply coming back.
+- **Numbered circle on the left of an arrow**: the step number. Match it to the table below.
+- **Stage banner**: the grey bar that opens each block tells you when the stage runs and which scheduled job kicks it off.
+- **`alt` block in Stage 4**: this is an if/else fork. Only one of the two paths runs at a time. The condition inside the square brackets `[ ]` is what decides which path runs. We use it because alerts are only sent when the score actually moved enough to matter.
+
 ### What each arrow means
 
 The numbers below match the numbered arrows in the diagram.
 
 **Stage 1: Price ingest (12:30 UTC, Sun to Thu)**
 
-| Step | Action |
-|------|--------|
-| 1 | APScheduler fires the `fetch_prices` job inside the FastAPI process. |
-| 2 | Backend asks yfinance for OHLCV (open, high, low, close, volume) for the 4 covered stocks and the TASI index. |
-| 3 | yfinance returns the price rows. |
-| 4 | Backend upserts them into `daily_prices`. New rows are inserted, existing ones are updated. |
+This stage downloads the latest stock prices once a day so the rest of the system has fresh data to work with.
+
+| Step | What's happening |
+|------|------------------|
+| 1 | The internal scheduler wakes up at 12:30 UTC and tells the backend to run the `fetch_prices` job. |
+| 2 | The backend calls Yahoo Finance and asks for today's prices for the 4 Tadawul stocks and the TASI index. It asks for OHLCV data: opening price, daily high, daily low, closing price, and trading volume. |
+| 3 | Yahoo Finance sends the price rows back. |
+| 4 | The backend saves the rows into the `daily_prices` table. If a row for that stock and date already exists, it updates it instead of duplicating it. |
 
 **Stage 2: Stats and pivots (12:35 UTC, Sun to Thu)**
 
-| Step | Action |
-|------|--------|
-| 5 | APScheduler fires `compute_stats_and_pivots`. |
-| 6 | Backend reads the latest `daily_prices`. The fresh-prices gate skips a stock if no row exists from the last 5 calendar days. |
-| 7 | Database returns the rows. |
-| 8 | Backend computes return mean and std, annualized volatility, VaR, classic pivots (PP, R1 to R3, S1 to S3), and the 52-week range. Writes everything into `stock_stats`. |
+Five minutes after prices land, this stage crunches the numbers that everything else depends on (volatility, VaR, support/resistance levels, the 52-week range).
 
-**Stage 3: News and sentiment (every 30 minutes)**
+| Step | What's happening |
+|------|------------------|
+| 5 | At 12:35 UTC the scheduler triggers the `compute_stats_and_pivots` job. The arrow goes scheduler → backend, kicking the job off. |
+| 6 | The backend asks the database for each stock's recent price history. The "fresh-prices gate" is a safety check: if a stock has no price row from the last 5 days (weekend, holiday, or Yahoo Finance failed), the job skips that stock so a stale risk score never gets written later. |
+| 7 | The database returns the price rows it has on file. |
+| 8 | The backend now runs the math and saves the results into the `stock_stats` table. It computes: **vol** = how much the price moves day to day (annualized volatility), **VaR** = the worst loss expected on a normal bad day at 95% confidence, **pivots** = the support and resistance levels traders watch (PP, R1 to R3, S1 to S3), and the **52-week range** = the highest and lowest price over the last year. |
 
-| Step | Action |
-|------|--------|
-| 9 | APScheduler fires `news_pipeline`. This one runs on weekends too because Argaam publishes outside Tadawul hours. |
-| 10 | Backend pulls articles from 5 Argaam RSS feeds, Argaam company pages, and GNews. |
-| 11 | The sources return article headlines and metadata. |
-| 12 | Backend inserts new articles into `news_articles`. Duplicates are dropped by the `unique(source, headline_ar)` constraint. |
-| 13 | Backend selects articles where `is_analyzed = false`, so the same article is never scored twice. |
-| 14 | Database returns the unanalyzed rows. |
-| 15 | Backend runs MARBERTv2 (Arabic BERT) on ONNX Runtime in batches of 16. Each article gets a sentiment label and a confidence score. |
-| 16 | Backend inserts the scores into `sentiment_scores`. |
+**Stage 3: News and sentiment (every 30 minutes, every day)**
 
-**Stage 4: Risk score, AI note, alert (12:40 UTC, Sun to Thu)**
+This stage runs on a faster cadence because news doesn't follow Tadawul trading hours. It pulls Arabic financial articles, scores their tone with an Arabic BERT model, and saves the results.
 
-| Step | Action |
-|------|--------|
-| 17 | APScheduler fires `compute_risk`. |
-| 18 | Backend reads the latest `stock_stats`, the last 14 days of `sentiment_scores`, and `daily_prices`. |
-| 19 | Database returns the rows. |
-| 20 | Backend computes the composite risk score (75% quantitative, 25% sentiment) and runs a 10,000-path Monte Carlo simulation. |
-| 21 | Backend calls OpenRouter (DeepSeek) with a strict Arabic prompt asking for a JSON-formatted risk note. |
+| Step | What's happening |
+|------|------------------|
+| 9 | Every 30 minutes the scheduler triggers the `news_pipeline` job. This one runs on Fridays and Saturdays too because Argaam publishes outside Tadawul hours. |
+| 10 | The backend pulls articles from three places: 5 Argaam RSS feeds, the Argaam company pages, and GNews. |
+| 11 | Those sources return the article headlines and metadata. |
+| 12 | The backend saves new articles into the `news_articles` table. Duplicates are blocked by a database constraint on (source, headline). |
+| 13 | The backend asks the database for any articles that have not been scored yet (`is_analyzed = false`). This guarantees the same article is never analyzed twice. |
+| 14 | The database returns the unscored articles. |
+| 15 | The backend feeds the articles to MARBERTv2 (an Arabic BERT model) running on ONNX Runtime, in batches of 16 for speed. Each article gets a sentiment label (positive, negative, neutral) and a confidence score from 0 to 1. |
+| 16 | The backend saves the scores into the `sentiment_scores` table. |
+
+**Stage 4: Risk score, AI note, email alert (12:40 UTC, Sun to Thu)**
+
+This is the main pipeline. It combines yesterday's stats with the last 14 days of sentiment, produces a single risk score per stock, asks DeepSeek to write a short Arabic explanation, and (only if the score actually moved) sends a threaded email to premium users.
+
+| Step | What's happening |
+|------|------------------|
+| 17 | At 12:40 UTC the scheduler triggers the `compute_risk` job. |
+| 18 | The backend pulls three things from the database: the latest `stock_stats`, the last 14 days of `sentiment_scores`, and recent `daily_prices`. |
+| 19 | The database returns the rows. |
+| 20 | The backend computes the composite risk score (75% from quantitative metrics like volatility and VaR, 25% from sentiment) and runs a 10,000-path Monte Carlo simulation to estimate the price distribution 30 days out. |
+| 21 | The backend sends a strict Arabic prompt to OpenRouter (running DeepSeek) asking for a structured JSON note: a headline, a few paragraphs, and watch points. |
 | 22 | OpenRouter returns the JSON note. |
-| 23 | Backend validates the JSON: Arabic-character ratio above 60%, every paragraph has a digit, banned investment-advice tokens are rejected. On failure it falls back to a rule-based generator. |
-| 24 | Backend writes the score into `risk_metrics` and the note into `risk_notes`. |
-| 25 | If the score moved by 5 points or more, backend sends a Resend email. The Message-ID is deterministic per (user, symbol) so follow-up emails thread into one Gmail conversation. |
-| 26 | Resend returns the delivery confirmation. |
-| 27 | Backend logs the send into `sent_alerts` so the next email can extend the References chain. If the delta was below 5, this whole block is skipped but the DB rows are still written. |
+| 23 | The backend validates the response. Three checks must pass: at least 60% of the characters are Arabic, every paragraph contains a digit (so the note is grounded in real numbers), and banned tokens like اشتري or توصية are rejected (we never give investment advice). If any check fails, a hand-written rule-based generator is used instead. |
+| 24 | The backend writes the score into `risk_metrics` and the AI note into `risk_notes`. The dashboard reads these tables, so the user always sees the freshest numbers and narrative. |
 
-**Stage 5: User browsing and chat**
+Now the **`alt` block** decides whether to send an email:
 
-| Step | Action |
-|------|--------|
-| 28 | User opens a page in the React app. The frontend calls Supabase directly via the JS SDK using the anonymous key, protected by Row-Level Security. |
-| 29 | Supabase returns the requested market data (prices, stats, risk, news). |
-| 30 | When the user asks the AI assistant a question, the frontend POSTs to `/api/v1/assistant/chat`. |
-| 31 | Backend builds a stock-aware context (latest price, risk score, sentiment summary, top news) and forwards it to OpenRouter with the user question. |
+| Step | What's happening |
+|------|------------------|
+| | **Path A — score moved 5 points or more (`risk_score_delta >= 5`)** |
+| 25 | The backend sends an email through Resend. The Message-ID is generated deterministically from (user, symbol) plus the date, and the In-Reply-To header points at the previous email for that user and symbol. This makes Gmail group all of a user's alerts for one stock into a single thread instead of cluttering the inbox. |
+| 26 | Resend confirms delivery. |
+| 27 | The backend logs the send into the `sent_alerts` table so the next email can chain back to this one. |
+| | **Path B — score moved less than 5 points (`risk_score_delta < 5`)** |
+| | No email is sent (the difference is too small to justify pinging the user), but the new score and note from step 24 are already saved in the database. The dashboard still shows the update. |
+
+**Stage 5: User browses or chats with the assistant**
+
+This is the live request path. Most reads go straight from the React frontend to Supabase. The chat assistant takes a different path because it needs to enrich the question with context before sending it to the AI.
+
+| Step | What's happening |
+|------|------------------|
+| 28 | The user opens a page in the React dashboard. The frontend calls Supabase directly using the JS SDK and the anonymous key. Row-Level Security policies on Supabase decide what data the user is allowed to see. |
+| 29 | Supabase returns the data the page asked for (prices, stats, risk score, news, AI note). |
+| 30 | When the user asks the assistant a question, the frontend POSTs the question to `/api/v1/assistant/chat` on the backend. |
+| 31 | The backend builds a stock-aware context block (latest price, current risk score, sentiment summary, top news headlines) and forwards the user question plus that context to OpenRouter. |
 | 32 | OpenRouter returns the AI reply. |
-| 33 | Backend forwards the reply to the frontend. |
+| 33 | The backend forwards the reply back to the frontend, which renders it in the chat panel. |
 
 ### Key behaviors
 
