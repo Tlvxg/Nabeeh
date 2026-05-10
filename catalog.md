@@ -165,6 +165,91 @@ flowchart LR
 | `alerts/` | Resend | `sent_alerts` |
 | `notes/` | OpenRouter | `risk_notes` |
 
+### Inside one module: the standard file pattern
+
+Every module follows the same 5-file shape. Once you understand it for one module, you understand it for all of them. Here is the pattern using `news/` as the example:
+
+```mermaid
+flowchart LR
+  EXT[outside the module<br/>HTTP, scheduler, other modules] -- 1 --> R[router.py]
+  R -- 2 --> S[service.py]
+  S -- 3 --> REP[repository.py]
+  REP -- 4 --> DB[(Supabase Postgres)]
+  S -.uses.-> SCH[schemas.py]
+  R -.uses.-> SCH
+  REP -.uses.-> SCH
+  INIT[__init__.py<br/>marks folder as a package]
+```
+
+**The 5 files and what each one does.**
+
+| File | Job | Imports from |
+|------|-----|--------------|
+| `__init__.py` | Marks the folder as a Python package. Usually empty. | nothing |
+| `router.py` | Defines the HTTP routes (`@router.get(...)`). Validates inputs, calls the service, returns the response. **No business logic here.** | `service`, `schemas` |
+| `service.py` | The actual work. Pure-ish functions or classes that orchestrate. **Calls the repository for DB access, never the database directly.** | `repository`, `schemas`, external libs (httpx, yfinance) |
+| `repository.py` | The only file in the module that touches Supabase. All `select`, `insert`, `update`, `upsert` calls live here. | `database`, `schemas` |
+| `schemas.py` | Pydantic models for request bodies, response shapes, and internal data structures shared between layers. | nothing internal |
+
+**Why the layered split.** When the team needs to change something, the layer tells you where to go.
+
+- New endpoint? `router.py`.
+- New computation or external API call? `service.py`.
+- New table or new column? `repository.py`.
+- New request or response shape? `schemas.py`.
+
+You should rarely touch more than one of these for a small change. If you find yourself editing all four for a single feature, the change is bigger than it looks.
+
+### Per-module exceptions to the pattern
+
+Three modules add files on top of the standard 5 because they need extra tools. The screenshot you sent shows these exceptions:
+
+```mermaid
+flowchart LR
+  alerts[alerts/] --> a1[__init__.py]
+  alerts --> a2[schemas.py]
+  alerts --> a3[service.py]
+  alerts --> a4["template.py<br/>(extra)"]
+  alerts --> a5["threading.py<br/>(extra)"]
+
+  notes[notes/] --> n1[__init__.py]
+  notes --> n2[schemas.py]
+  notes --> n3[service.py]
+  notes --> n4[repository.py]
+  notes --> n5["fallback.py<br/>(extra)"]
+
+  prices[prices/] --> p1[__init__.py]
+  prices --> p2[schemas.py]
+  prices --> p3[service.py]
+  prices --> p4[repository.py]
+  prices --> p5[router.py]
+  prices --> p6["providers/<br/>(extra subfolder)"]
+
+  sent[sentiment/] --> s1[__init__.py]
+  sent --> s2[schemas.py]
+  sent --> s3[service.py]
+  sent --> s4[repository.py]
+  sent --> s5[router.py]
+  sent --> s6["model.py<br/>(extra)"]
+
+  classDef extra fill:#fef3c7,stroke:#a16207,color:#000
+  class a4,a5,n5,p6,s6 extra
+```
+
+Yellow files are the per-module additions. Plain English for each:
+
+| Module | Extra file or folder | Why it exists |
+|--------|----------------------|---------------|
+| `alerts/` | `template.py` | Builds the HTML and plain-text email body. Kept separate from `service.py` so the email layout can change without touching the send logic. |
+| `alerts/` | `threading.py` | Generates the deterministic RFC-5322 `Message-ID` and `In-Reply-To` headers so successive alerts for the same `(user, symbol)` pair land in one Gmail thread. |
+| `notes/` | `fallback.py` | A hand-written rule-based generator that produces the Arabic narrative when the AI response fails validation (Arabic ratio too low, missing digits, banned tokens). Guarantees the dashboard always has a note to show. |
+| `prices/` | `providers/` (folder of 4 files: `base.py`, `factory.py`, `yfinance_provider.py`, `__init__.py`) | A pluggable data-source layer. `base.py` defines the interface, `yfinance_provider.py` is the only implementation today, `factory.py` chooses which provider to use based on the `DATA_PROVIDER` env var. Lets us swap yfinance for another data source later without touching `service.py`. |
+| `sentiment/` | `model.py` | Loads MARBERTv2 once at startup, converts it to ONNX Runtime, and exposes a `predict(texts)` function. Lives in its own file because the model is a heavy singleton (around 500 MB in memory) and `service.py` should not own that lifecycle. |
+
+**Two modules have no `router.py` at all.** `alerts/` and `notes/` are internal-only. They are called from inside `compute_risk.py` and never exposed to HTTP. That is why the screenshot shows them missing the router file.
+
+**Two modules have no `repository.py`.** `assistant/` doesn't because the chat endpoint does not write to the database, it just builds context and forwards to OpenRouter. `alerts/` doesn't because it writes via the `sent_alerts` repository helper inside `compute_risk.py` instead of owning its own DB layer. (`notes/` does have a repository — it owns `risk_notes`.)
+
 ### Tasks (`backend/app/tasks/`)
 
 The scheduler invokes one task per pipeline stage.
@@ -428,6 +513,10 @@ flowchart LR
 - `seed_stocks.py` — inserts the 4 covered Tadawul tickers into the `stocks` table. Run once after creating a fresh Supabase project. Idempotent.
 - `seed_stock_descriptions.py` — populates the `description_ar` column for each stock so the dashboard can show a short company blurb.
 - `verify_pipeline.py` — runs each scheduler job once and prints row counts per table. The fastest way to check if a fresh setup is wired correctly end-to-end.
+
+> **Heads up on `apply_v3_migrations.sql`**: this file in `scripts/` is a one-shot snapshot from an earlier schema cut. The canonical schema lives in `supabase/migrations/`. The SQL file is kept only for historical reference and can be safely deleted on a future cleanup pass.
+
+> **Can the whole `scripts/` folder be deleted?** No. `build.sh` is the entry point Vercel runs on every deploy (`vercel.json` line 2: `"buildCommand": "bash scripts/build.sh"`). Deleting the folder would break Vercel deploys.
 
 **The config files explained.**
 
