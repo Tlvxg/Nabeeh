@@ -119,24 +119,19 @@ sequenceDiagram
     participant RS as Resend
     participant FE as React Frontend
 
-    rect rgb(255, 243, 224)
-    Note over SCHED,DB: PIPE-01, 12:30 UTC, Sun to Thu, fetch_prices
+    Note over SCHED,DB: Stage 1: PIPE-01 fetch_prices (12:30 UTC, Sun to Thu)
     SCHED->>BE: trigger fetch_prices
     BE->>YF: GET OHLCV for 4 stocks + TASI
     YF-->>BE: prices
     BE->>DB: UPSERT daily_prices
-    end
 
-    rect rgb(227, 242, 253)
-    Note over SCHED,DB: PIPE-04, 12:35 UTC, Sun to Thu, compute_stats + pivots
+    Note over SCHED,DB: Stage 2: PIPE-04 compute_stats + pivots (12:35 UTC, Sun to Thu)
     SCHED->>BE: trigger compute_stats_and_pivots
     BE->>DB: SELECT daily_prices (fresh-prices gate)
     DB-->>BE: rows
     BE->>DB: UPSERT stock_stats (vol, VaR, pivots, 52w range)
-    end
 
-    rect rgb(243, 229, 245)
-    Note over SCHED,DB: PIPE-02/03, every 30 min, news + sentiment
+    Note over SCHED,DB: Stage 3: PIPE-02/03 news + sentiment (every 30 min, all days)
     SCHED->>BE: trigger news_pipeline
     BE->>ARG: fetch RSS feeds and GNews
     ARG-->>BE: articles
@@ -145,10 +140,8 @@ sequenceDiagram
     DB-->>BE: unanalyzed rows
     BE->>BE: MARBERT ONNX inference (batch of 16)
     BE->>DB: INSERT sentiment_scores
-    end
 
-    rect rgb(232, 245, 233)
-    Note over SCHED,RS: PIPE-05/06/07, 12:40 UTC, Sun to Thu, risk + AI note + alert
+    Note over SCHED,RS: Stage 4: PIPE-05/06/07 risk + AI note + alert (12:40 UTC, Sun to Thu)
     SCHED->>BE: trigger compute_risk
     BE->>DB: SELECT stats, sentiment, prices
     DB-->>BE: rows
@@ -164,20 +157,79 @@ sequenceDiagram
     else risk_score_delta < 5
         Note right of BE: email skipped, DB row still written
     end
-    end
 
-    rect rgb(255, 253, 231)
-    Note over FE,OR: User browses dashboard or chats
+    Note over FE,OR: Stage 5: user browses dashboard or chats
     FE->>DB: SELECT via Supabase JS SDK (RLS public read)
     DB-->>FE: market data
     FE->>BE: POST /api/v1/assistant/chat
     BE->>OR: chat with stock context
     OR-->>BE: reply
     BE-->>FE: reply
-    end
 ```
 
-Key behaviors:
+### What each arrow means
+
+The numbers below match the numbered arrows in the diagram.
+
+**Stage 1: Price ingest (12:30 UTC, Sun to Thu)**
+
+| Step | Action |
+|------|--------|
+| 1 | APScheduler fires the `fetch_prices` job inside the FastAPI process. |
+| 2 | Backend asks yfinance for OHLCV (open, high, low, close, volume) for the 4 covered stocks and the TASI index. |
+| 3 | yfinance returns the price rows. |
+| 4 | Backend upserts them into `daily_prices`. New rows are inserted, existing ones are updated. |
+
+**Stage 2: Stats and pivots (12:35 UTC, Sun to Thu)**
+
+| Step | Action |
+|------|--------|
+| 5 | APScheduler fires `compute_stats_and_pivots`. |
+| 6 | Backend reads the latest `daily_prices`. The fresh-prices gate skips a stock if no row exists from the last 5 calendar days. |
+| 7 | Database returns the rows. |
+| 8 | Backend computes return mean and std, annualized volatility, VaR, classic pivots (PP, R1 to R3, S1 to S3), and the 52-week range. Writes everything into `stock_stats`. |
+
+**Stage 3: News and sentiment (every 30 minutes)**
+
+| Step | Action |
+|------|--------|
+| 9 | APScheduler fires `news_pipeline`. This one runs on weekends too because Argaam publishes outside Tadawul hours. |
+| 10 | Backend pulls articles from 5 Argaam RSS feeds, Argaam company pages, and GNews. |
+| 11 | The sources return article headlines and metadata. |
+| 12 | Backend inserts new articles into `news_articles`. Duplicates are dropped by the `unique(source, headline_ar)` constraint. |
+| 13 | Backend selects articles where `is_analyzed = false`, so the same article is never scored twice. |
+| 14 | Database returns the unanalyzed rows. |
+| 15 | Backend runs MARBERTv2 (Arabic BERT) on ONNX Runtime in batches of 16. Each article gets a sentiment label and a confidence score. |
+| 16 | Backend inserts the scores into `sentiment_scores`. |
+
+**Stage 4: Risk score, AI note, alert (12:40 UTC, Sun to Thu)**
+
+| Step | Action |
+|------|--------|
+| 17 | APScheduler fires `compute_risk`. |
+| 18 | Backend reads the latest `stock_stats`, the last 14 days of `sentiment_scores`, and `daily_prices`. |
+| 19 | Database returns the rows. |
+| 20 | Backend computes the composite risk score (75% quantitative, 25% sentiment) and runs a 10,000-path Monte Carlo simulation. |
+| 21 | Backend calls OpenRouter (DeepSeek) with a strict Arabic prompt asking for a JSON-formatted risk note. |
+| 22 | OpenRouter returns the JSON note. |
+| 23 | Backend validates the JSON: Arabic-character ratio above 60%, every paragraph has a digit, banned investment-advice tokens are rejected. On failure it falls back to a rule-based generator. |
+| 24 | Backend writes the score into `risk_metrics` and the note into `risk_notes`. |
+| 25 | If the score moved by 5 points or more, backend sends a Resend email. The Message-ID is deterministic per (user, symbol) so follow-up emails thread into one Gmail conversation. |
+| 26 | Resend returns the delivery confirmation. |
+| 27 | Backend logs the send into `sent_alerts` so the next email can extend the References chain. If the delta was below 5, this whole block is skipped but the DB rows are still written. |
+
+**Stage 5: User browsing and chat**
+
+| Step | Action |
+|------|--------|
+| 28 | User opens a page in the React app. The frontend calls Supabase directly via the JS SDK using the anonymous key, protected by Row-Level Security. |
+| 29 | Supabase returns the requested market data (prices, stats, risk, news). |
+| 30 | When the user asks the AI assistant a question, the frontend POSTs to `/api/v1/assistant/chat`. |
+| 31 | Backend builds a stock-aware context (latest price, risk score, sentiment summary, top news) and forwards it to OpenRouter with the user question. |
+| 32 | OpenRouter returns the AI reply. |
+| 33 | Backend forwards the reply to the frontend. |
+
+### Key behaviors
 
 - `_has_fresh_prices()` gate: `compute_stats` and `compute_risk` skip a stock if no row exists in `daily_prices` from the last 5 calendar days. This handles weekends, holidays, and yfinance outages so stale risk scores never get written.
 - News pipeline runs every 30 minutes on all days, because Argaam publishes outside Tadawul hours. Sentiment analysis only runs on `is_analyzed = false` rows so it never re-processes.
