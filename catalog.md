@@ -9,43 +9,55 @@ Every diagram below renders directly on GitHub. Each box is a real folder or fil
 ## 1. Repo at a glance
 
 ```mermaid
-mindmap
-  root((nabeeh))
-    Vercel serverless
-      api/chat.py
-      api/tasi.py
-      api/health.py
-    Backend FastAPI
-      backend/app
-      backend/scripts
-      backend/models
-      backend/Dockerfile
-    Frontend SPA
-      dashboard/src
-      dashboard/public
-      dashboard/vite.config.ts
-    Database
-      supabase/migrations
-    Brand
-      assets/logo
-    Root scripts
-      scripts/build.sh
-      scripts/verify_pipeline.py
-    Config
-      README.md
-      catalog.md
-      vercel.json
-      pyproject.toml
+flowchart LR
+  ROOT[nabeeh repo]
+  ROOT --> A[api]
+  ROOT --> B[backend]
+  ROOT --> D[dashboard]
+  ROOT --> S[scripts]
+  ROOT --> SB[supabase]
+  ROOT --> AS[assets]
+  ROOT --> RC[root config]
+
+  A --> A1[chat.py]
+  A --> A2[tasi.py]
+  A --> A3[health.py]
+
+  B --> B1[app]
+  B --> B2[scripts]
+  B --> B3[models]
+  B --> B4[Dockerfile]
+
+  D --> D1[src]
+  D --> D2[public]
+  D --> D3[vite.config.ts]
+
+  S --> S1[build.sh]
+  S --> S2[verify_pipeline.py]
+
+  SB --> SB1[migrations]
+
+  AS --> AS1[logos]
+
+  RC --> RC1[README.md]
+  RC --> RC2[catalog.md]
+  RC --> RC3[vercel.json]
+  RC --> RC4[pyproject.toml]
 ```
 
-| Folder | One-line role |
-|--------|---------------|
-| `api/` | 3 Python serverless functions deployed with the SPA on Vercel. |
-| `assets/` | Logo files (light and dark theme, PNG and SVG). |
-| `backend/` | FastAPI app. The brain. Deployed to Railway as a Docker container. |
-| `dashboard/` | React 19 + Vite TypeScript SPA. The user-facing app. |
-| `scripts/` | Build helper for Vercel and operational utilities. |
-| `supabase/migrations/` | 11 SQL files. Single source of truth for the database schema. |
+**What this shows.** The seven top-level folders of the repo and the single most important child of each. Every box is a real path on disk. The branches do not depend on each other, so a teammate can dive into any one of them without touching the others.
+
+**The seven branches in plain English.**
+
+| Folder | One-line role | Where it runs |
+|--------|---------------|---------------|
+| `api/` | 3 small Python functions exposed at `/api/*`. The chat proxy, the TASI quote endpoint, and a health check. | Vercel serverless |
+| `backend/` | FastAPI app that fetches prices, runs the sentiment model, computes risk, and sends alerts. The "brain". | Railway, Docker container |
+| `dashboard/` | React 19 + Vite + TypeScript single-page app. Everything the user sees. | Vercel static + SPA |
+| `scripts/` | Shell + Python helpers for build and DB seeding. | Local + Vercel build step |
+| `supabase/migrations/` | 11 SQL files. Single source of truth for the schema. Apply in alphabetical order. | Supabase Postgres |
+| `assets/` | Light and dark logo files, PNG and SVG. | Imported by the dashboard |
+| Root config | `README.md`, `catalog.md`, `vercel.json`, `pyproject.toml`, lockfiles. | Read by tools, not by users |
 
 ---
 
@@ -65,7 +77,15 @@ flowchart LR
   fe[dashboard services/api.ts] --calls /api/*--> api
 ```
 
-These are short, edge-friendly functions, not the long-running backend. The dashboard calls them through `/api/*` paths.
+**What this shows.** The 3 Python functions deployed alongside the dashboard on Vercel. They run on demand, return a response, and exit. They are short by design (no long-running work, no scheduler, no database migrations).
+
+**Why they exist as serverless and not in the FastAPI backend.**
+
+- `chat.py`: keeps the OpenRouter API key out of the browser. The dashboard could call OpenRouter directly only if we exposed the key, which would be unsafe.
+- `tasi.py`: a thin yfinance wrapper for the live TASI index banner on the dashboard. It belongs at the edge so the page loads fast.
+- `health.py`: trivial 200 OK so Vercel can verify deployments and external monitors can ping the SPA.
+
+The long-running, scheduler-driven, ML-heavy work lives in `backend/` on Railway. The split is intentional: edge for short request-response, Railway for everything else.
 
 ---
 
@@ -96,6 +116,20 @@ flowchart LR
   models --> tok["tokenizer<br/>(MARBERT files)"]
 ```
 
+**What this shows.** The full layout of the FastAPI service. Read it left to right: the package root, then the `app/` package which holds all the runtime code, then the two operational helpers (`scripts/`, `models/`).
+
+**The four parts of `app/` to know.**
+
+- `main.py` — boots FastAPI, mounts the 5 module routers, runs the lifespan startup (load MARBERT, fetch initial prices, start the scheduler).
+- `config.py` — every environment variable lives here as a Pydantic Settings field. If you need a new env var, this is the only file you touch.
+- `database.py` — exposes two Supabase clients. The anon-key client respects RLS (used for reads). The service-role client bypasses RLS (used for scheduler writes).
+- `scheduler.py` — defines the 4 cron jobs and the `_has_fresh_prices()` gate that protects against running stats or risk on stale data.
+
+**The two helper folders.**
+
+- `scripts/` — one-shot CLI scripts you run by hand. `seed_stocks.py` once after creating a new Supabase project. `backfill_risk_notes.py` after launch when the dashboard would otherwise show empty AI notes.
+- `models/` — pre-cached MARBERT tokenizer files. The actual ONNX model weights download from HuggingFace on first start (around 500 MB) and cache locally.
+
 ### Modules (`backend/app/modules/`)
 
 Each module follows the same shape: `router.py` (HTTP routes), `service.py` (logic), `repository.py` (DB access), `schemas.py` (Pydantic models).
@@ -115,7 +149,21 @@ flowchart LR
   class alerts,notes internal
 ```
 
-Yellow boxes have no HTTP router. They are called from inside the backend only.
+**What this shows.** The 7 domain modules that make up the backend. Each module owns one concept and is shaped the same way internally: `router.py` (HTTP routes), `service.py` (business logic), `repository.py` (DB access), `schemas.py` (Pydantic request/response types).
+
+**Why two are shaded yellow.** The yellow boxes (`alerts/`, `notes/`) have no `router.py`. They are never called by HTTP. They are called from inside the `compute_risk` task: `notes/` writes the Arabic narrative every time the score changes, and `alerts/` sends the threaded email when the score moves enough to matter.
+
+**What each module owns.**
+
+| Module | Talks to | Writes to |
+|--------|----------|-----------|
+| `prices/` | yfinance | `daily_prices` |
+| `risk/` | the database | `risk_metrics` |
+| `news/` | Argaam RSS + Argaam company pages | `news_articles` |
+| `sentiment/` | the MARBERT ONNX model | `sentiment_scores` |
+| `assistant/` | OpenRouter | (no DB writes, just returns the chat reply) |
+| `alerts/` | Resend | `sent_alerts` |
+| `notes/` | OpenRouter | `risk_notes` |
 
 ### Tasks (`backend/app/tasks/`)
 
@@ -131,6 +179,12 @@ flowchart LR
 
   startup[main.py lifespan] --> sh["startup_health.py<br/>boot check"]
 ```
+
+**What this shows.** The 6 task files that the scheduler invokes. Each file is one stage of the daily pipeline. The `PIPE-XX` labels match the README pipeline diagram so you can cross-reference.
+
+**Why tasks are separate from modules.** Modules expose HTTP routes to the dashboard. Tasks orchestrate. A task pulls data from one module, hands it to another, and writes the result. Example: `compute_risk.py` reads `stock_stats` (written by the prices module's `compute_stats` task), reads `sentiment_scores` (written by the sentiment module), combines them into a single risk score, then asks the `notes/` module for the Arabic narrative and the `alerts/` module to send the email.
+
+**`startup_health.py` is the only one not on the cron**. It runs once during the FastAPI lifespan startup to verify Supabase is reachable and the required tables exist before the scheduler is allowed to fire.
 
 ---
 
@@ -159,6 +213,18 @@ flowchart LR
   src --> styles["styles/"]
 ```
 
+**What this shows.** The folder structure under `dashboard/`. The interesting work happens under `src/`. The siblings (`package.json`, `vite.config.ts`, `index.html`, `public/`) are setup files you barely touch.
+
+**The `src/` subfolders, ordered by how often you change them.**
+
+- `pages/` — one file per route. Add a route here.
+- `components/` — reusable building blocks for those pages. Add reusable UI here.
+- `hooks/` — custom React hooks. Anything that needs state, fetching, or memoization across components.
+- `services/` — the I/O layer. `supabase-queries.ts` is the only file in the project that reads from Supabase. `api.ts` is the only file that calls the FastAPI backend. Centralizing I/O here keeps components clean.
+- `utils/` — pure functions. No hooks, no I/O. Math, formatting, signal generation.
+- `config/` — app-wide constants and the Supabase client itself. Read-only at runtime.
+- `layouts/`, `providers/`, `workers/`, `types/`, `styles/` — supporting plumbing you rarely change after initial setup.
+
 ### Pages (`dashboard/src/pages/`)
 
 ```mermaid
@@ -184,6 +250,15 @@ flowchart LR
   misc --> settings["SettingsPage<br/>/settings"]
   misc --> upgrade["UpgradePage<br/>/upgrade"]
 ```
+
+**What this shows.** The 11 routes the React Router serves, grouped into 4 buckets by who can reach them.
+
+**The four buckets.**
+
+- **Public.** Anyone with the URL gets in. The landing page sells the product. The 404 catches typos.
+- **Auth.** Sign-in and sign-up. These talk to Supabase Auth directly.
+- **Protected.** The actual product. `RouteGuard` gates them, redirecting unauthenticated users to `/login`. `StockDetailPage` is the heaviest of the bunch (candlestick + indicators + Monte Carlo + risk breakdown + sentiment + AI note all on one screen).
+- **Misc.** Account-related screens that need auth but are not part of the daily flow.
 
 ### Components (`dashboard/src/components/`)
 
@@ -225,11 +300,24 @@ mindmap
       NabeehAILogo
       UpgradePrompt
     UI primitives
-      ui/badge
-      ui/button
-      ui/card
-      ui/chart
+      badge
+      button
+      card
+      chart
 ```
+
+**What this shows.** Every reusable component in the app, grouped by what it does. Names are the exact filename (drop `.tsx`). The "UI primitives" group lives under `components/ui/` and uses shadcn-style primitives.
+
+**Where each group is used.**
+
+- **Charts** — render on `StockDetailPage` (candlestick + Monte Carlo) and `DashboardPage` (gauges, sentiment trend).
+- **Risk panels** — the right side of `StockDetailPage`. Each panel reads one slice of risk data and lets the user customize indicator periods and Monte Carlo horizon.
+- **Stock info** — `StockTable` powers the dashboard grid. `WatchlistSection` is the personalized strip above it. `CompanyInfoCard` and `StockLogo` show on the detail page.
+- **Market and news** — `SentimentBar` is the colored bar showing the rolling sentiment per stock. `NewsCard` renders one article. `SignalSummaryCard` aggregates indicators into a single buy/sell hint.
+- **AI surfaces** — `NabeehNotes` renders the Arabic AI risk narrative on the detail page. `ChatWidget` is the floating assistant that follows you across the app.
+- **Layout** — `Header`, `Sidebar`, and `RouteGuard` (the auth gate).
+- **Branding** — the logo component and the upgrade upsell prompt.
+- **UI primitives** — badge, button, card, chart wrappers from shadcn. Reused by every other component.
 
 ### Hooks (`dashboard/src/hooks/`)
 
@@ -260,6 +348,14 @@ mindmap
       useAnalysisPrefs
 ```
 
+**What this shows.** All 19 custom React hooks grouped by what they do.
+
+**The three groups.**
+
+- **Data fetching** wraps `supabase-queries.ts` calls in TanStack Query. Caches the response, handles loading and error states, retries on failure. Components never call Supabase directly. They call one of these hooks.
+- **Computation** runs math in the browser. `useRiskScore` mirrors the backend formula so the UI can recompute instantly when the user adjusts weights. `useMonteCarloSimulation` runs the simulation in a Web Worker (off the main thread) for smooth UI. `useServerMonteCarlo` is the alternative that asks the backend to do it.
+- **State and prefs** hold per-user state. `useAuth` wraps Supabase Auth. `useWatchlist` reads and writes the user's watchlist. `useAnalysisPrefs` and `useTheme` persist UI preferences across sessions.
+
 ---
 
 ## 5. Database schema timeline (`supabase/migrations/`)
@@ -279,6 +375,12 @@ flowchart LR
   M9 --> M10[2026-04-18<br/>risk history]
   M10 --> M11[2026-05-01<br/>risk_notes + sent_alerts]
 ```
+
+**What this shows.** All 11 SQL migrations in the order they were written, left to right. Filename prefix is the date the migration was added.
+
+**How to apply them.** Open the Supabase SQL Editor in your project, copy each file in alphabetical order, and run it. The order matters because later migrations reference tables created in earlier ones. Skipping or reordering breaks the build.
+
+**Reading the timeline.** Most of February 2026 was schema bring-up: the initial schema first, then incremental columns (pivots, Monte Carlo paths, 52-week range) the same day. Late February added user-facing tables (profiles, watchlist, preferences). April was small additions (stock descriptions, history retention). May 1 added the AI risk notes and the email-threading log, which is the most recent feature.
 
 | Migration | Adds |
 |-----------|------|
@@ -317,6 +419,25 @@ flowchart LR
   cfg --> uv["uv.lock"]
   cfg --> rreq["requirements.txt<br/>(empty marker)"]
 ```
+
+**What this shows.** The two boxes you might touch outside the main folders: the operational scripts at the repo root, and the platform config files.
+
+**The four scripts.**
+
+- `build.sh` — Vercel runs this on every deploy. It runs `npm ci` and `npm run build` inside `dashboard/` and moves the output to `dist/`. The other Vercel-side config (output directory, install command) is in `vercel.json`.
+- `seed_stocks.py` — inserts the 4 covered Tadawul tickers into the `stocks` table. Run once after creating a fresh Supabase project. Idempotent.
+- `seed_stock_descriptions.py` — populates the `description_ar` column for each stock so the dashboard can show a short company blurb.
+- `verify_pipeline.py` — runs each scheduler job once and prints row counts per table. The fastest way to check if a fresh setup is wired correctly end-to-end.
+
+**The config files explained.**
+
+- `vercel.json` — tells Vercel how to build (calls `scripts/build.sh`), where the output lives (`dist/`), how to route SPA paths (rewrite all to `/index.html`), and which Python files become serverless functions (everything in `api/`).
+- `.vercelignore` — excludes `backend/` and `supabase/` from the Vercel upload so it does not try to build them.
+- `.gitignore` — secrets, build artifacts, OS files, IDE state. Keeps the repo clean.
+- `.python-version` — pins Python 3.10 for pyenv users.
+- `pyproject.toml` — ruff configuration for the root scripts.
+- `uv.lock` — lockfile for the root scripts (uv is a faster pip).
+- `requirements.txt` — intentionally empty. It exists at the root only so Vercel does not auto-detect a Python backend. Real backend deps are in `backend/requirements.txt`.
 
 ---
 
