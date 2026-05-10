@@ -1,0 +1,122 @@
+/* ============================================================
+   NabeehNotes — narrative analysis card
+   ============================================================ */
+
+.nn {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+/* ── Header ── */
+.nn__head {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.nn__level {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+}
+.nn__level--high   { background: var(--color-negative-bg); color: var(--color-negative); }
+.nn__level--medium { background: rgba(217,119,6,0.12);     color: #d97706; }
+.nn__level--low    { background: var(--color-positive-bg); color: var(--color-positive); }
+
+.nn__badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+.nn__badge--up   { background: var(--color-negative-bg); color: var(--color-negative); }
+.nn__badge--down { background: var(--color-positive-bg); color: var(--color-positive); }
+
+.nn__since {
+    font-size: 0.72rem;
+    color: var(--color-text-faint);
+    margin-inline-start: auto;
+}
+
+.nn__ai-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--color-positive-bg);
+    color: var(--color-positive);
+    letter-spacing: 0.02em;
+}
+
+.nn__headline {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 4px;
+    line-height: 1.5;
+    text-align: right;
+}
+
+/* ── Narrative body ── */
+.nn__body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.nn__para {
+    font-size: 0.86rem;
+    color: var(--color-text);
+    line-height: 1.8;
+    margin: 0;
+    text-align: right;
+}
+
+.nn__para:first-child {
+    font-weight: 600;
+}
+
+/* ── Watch points ── */
+.nn__watch {
+    padding: var(--spacing-sm);
+    background: var(--color-bg-subtle);
+    border-radius: var(--radius-sm);
+    border-right: 3px solid var(--color-border-strong);
+}
+
+.nn__watch-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.nn__watch-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nn__watch-list li {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    padding-right: 12px;
+    position: relative;
+}
+
+.nn__watch-list li::before {
+    content: '—';
+    position: absolute;
+    right: 0;
+    color: var(--color-text-faint);
+}

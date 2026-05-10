@@ -1,0 +1,188 @@
+/* =============================================
+   SignalSummaryCard — Consensus summary card
+   ============================================= */
+
+.ssc {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Header */
+.ssc__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--spacing-sm);
+}
+
+.ssc__title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.ssc__period-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text-faint);
+    background: var(--color-bg-input);
+    padding: 2px 8px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+/* Body: gauge + categories side by side */
+.ssc__body {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.ssc__gauge-col {
+    flex: 0 0 auto;
+}
+
+.ssc__svg {
+    width: 200px;
+    height: 128px;
+    display: block;
+}
+
+/* Animated progress arc */
+.ssc__progress {
+    transition: stroke-dashoffset 0.8s ease;
+}
+
+/* Verdict text inside gauge */
+.ssc__verdict-text {
+    font-size: 1rem;
+    font-weight: 800;
+    font-family: 'Cairo', sans-serif;
+}
+
+/* Arc endpoint labels */
+.ssc__arc-label {
+    font-size: 8px;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 600;
+}
+
+/* Category rows column */
+.ssc__categories-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    justify-content: center;
+    min-width: 160px;
+}
+
+.ssc__category-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 8px;
+    background: var(--color-bg-subtle);
+    border-radius: var(--radius-sm);
+    gap: var(--spacing-sm);
+}
+
+.ssc__category-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
+.ssc__category-verdict {
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+/* Signal count bar */
+.ssc__count-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ssc__count-bar {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--color-bg-input);
+}
+
+.ssc__count-seg {
+    height: 100%;
+    transition: flex-basis 0.4s ease;
+}
+.ssc__count-seg--pos { background: var(--color-positive); }
+.ssc__count-seg--neu { background: var(--color-text-muted); opacity: 0.5; }
+.ssc__count-seg--neg { background: var(--color-negative); }
+
+.ssc__count-labels {
+    display: flex;
+    justify-content: space-between;
+}
+
+.ssc__count-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+.ssc__count-label--pos { color: var(--color-positive); }
+.ssc__count-label--neu { color: var(--color-text-muted); }
+.ssc__count-label--neg { color: var(--color-negative); }
+
+/* Synthesis paragraph */
+.ssc__synthesis {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin: 0;
+    padding: var(--spacing-sm);
+    background: var(--color-bg-subtle);
+    border-radius: var(--radius-sm);
+    border-right: 3px solid var(--color-border-strong);
+}
+
+/* Disclaimer banner — CMA regulatory notice */
+.ssc__disclaimer {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin: 0;
+    padding: 8px 12px;
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    border-right: 3px solid var(--color-accent-gold, #e9c46a);
+    line-height: 1.5;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .ssc__body {
+        flex-direction: column;
+    }
+    .ssc__gauge-col {
+        align-self: center;
+    }
+    .ssc__svg {
+        width: 176px;
+        height: 112px;
+    }
+    .ssc__categories-col {
+        width: 100%;
+    }
+}

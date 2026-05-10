@@ -1,0 +1,86 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Build outputs
+dist/
+dashboard/dist/
+backend/*.egg-info/
+
+# Environment files (contain secrets) — match any *.env file, not just literal .env
+*.env
+*.env.*
+.env
+.env.local
+dashboard/.env.local
+backend/.env
+
+# Python virtualenv leakage at the project root (pip installed at repo root by mistake)
+/bin/
+*.dist-info/
+*.so
+*.egg-info/
+
+# Specific package directories that ended up at the root (legacy install)
+/Werkzeug/
+/annotated_types/
+/anyio/
+/certifi/
+/charset_normalizer/
+/distro/
+/exceptiongroup/
+/h11/
+/httpcore/
+/httpx/
+/idna/
+/pydantic/
+/pydantic_core/
+/requests/
+/resend/
+/sniffio/
+/typing_extensions.py
+/typing_inspection/
+/urllib3/
+/werkzeug/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+.vercel
+.env*.local
+
+# Supabase CLI local cache (regenerated on each `supabase` invocation)
+supabase/.temp/
+
+# Sample email renders (local dev artifacts)
+sample-emails/
+
+# Planning, documentation, presentations — local only
+.planning/
+Chapter*.txt
+classDiagram.*
+classmermaid.txt
+schemamermaid.txt
+presentation*.html
+presentation*.txt
+alert-preview.html
+logo-final-lighthouse.html
+photo/
+pptxxx/
+*.pptx
+Poster*.pdf
+capture.js
+create_poster.py
+create_team_doc.py
+draw_schema.py
+fill_poster.py

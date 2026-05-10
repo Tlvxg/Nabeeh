@@ -1,0 +1,194 @@
+/* ========================================
+   Customizer Dropdown — shared by both
+   Indicator and Risk customizers
+   ======================================== */
+
+.cust-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* ---- Trigger button ---- */
+.cust-dropdown__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-input);
+    cursor: pointer;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.cust-dropdown__trigger:hover {
+    border-color: var(--color-primary);
+    color: var(--color-text);
+    background: var(--color-bg-hover);
+}
+
+.cust-dropdown__trigger svg {
+    flex-shrink: 0;
+    opacity: 0.6;
+}
+
+.cust-dropdown__trigger:hover svg {
+    opacity: 1;
+}
+
+.cust-dropdown__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    padding: 1px 6px;
+    border-radius: var(--radius-full);
+    background: var(--color-primary);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.cust-dropdown__arrow {
+    transition: transform var(--transition-fast);
+}
+
+.cust-dropdown__arrow--open {
+    transform: rotate(180deg);
+}
+
+/* ---- Dropdown menu ---- */
+.cust-dropdown__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 50;
+    min-width: 280px;
+    max-width: 340px;
+    padding: 6px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-card);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+    animation: cust-dropdown-in 0.15s ease-out;
+}
+
+@keyframes cust-dropdown-in {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ---- Menu item ---- */
+.cust-dropdown__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.cust-dropdown__item:hover {
+    background: var(--color-bg-hover);
+}
+
+.cust-dropdown__item-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.cust-dropdown__item-label {
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.3;
+}
+
+.cust-dropdown__item-desc {
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: var(--color-text-faint);
+    line-height: 1.5;
+}
+
+/* ---- Toggle switch ---- */
+.cust-dropdown__switch {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 36px;
+    min-width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--color-bg-subtle, #d1d5db);
+    padding: 2px;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.cust-dropdown__switch--on {
+    background: var(--color-primary);
+}
+
+.cust-dropdown__switch-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform var(--transition-fast);
+}
+
+.cust-dropdown__switch--on .cust-dropdown__switch-thumb {
+    transform: translateX(-16px);
+}
+
+/* RTL fix — thumb slides left in RTL */
+[dir="rtl"] .cust-dropdown__switch-thumb {
+    transform: translateX(0);
+}
+
+[dir="rtl"] .cust-dropdown__switch--on .cust-dropdown__switch-thumb {
+    transform: translateX(-16px);
+}
+
+/* ---- Dark mode adjustments ---- */
+[data-theme="dark"] .cust-dropdown__menu {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .cust-dropdown__switch {
+    background: var(--color-bg-input, #374151);
+}
+
+[data-theme="dark"] .cust-dropdown__switch--on {
+    background: var(--color-primary);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .cust-dropdown__menu {
+        min-width: 260px;
+        right: auto;
+        left: 0;
+    }
+}

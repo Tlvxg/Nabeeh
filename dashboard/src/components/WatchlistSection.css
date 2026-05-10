@@ -1,0 +1,206 @@
+/* ========================================
+   WatchlistSection
+   ======================================== */
+
+.watchlist__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+/* ---- Card ---- */
+.watchlist__card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    text-decoration: none;
+    color: inherit;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.watchlist__card:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-1px);
+}
+
+/* ---- Remove button ---- */
+.watchlist__remove {
+    position: absolute;
+    top: 6px;
+    inset-inline-start: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--color-text-faint);
+    cursor: pointer;
+    opacity: 0;
+    transition: all var(--transition-fast);
+    z-index: 2;
+}
+
+.watchlist__card:hover .watchlist__remove {
+    opacity: 1;
+}
+
+.watchlist__remove:hover {
+    background: rgba(211, 47, 47, 0.1);
+    color: var(--color-negative);
+}
+
+/* ---- Stock info ---- */
+.watchlist__info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+}
+
+.watchlist__name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.watchlist__ticker {
+    font-size: 0.68rem;
+    color: var(--color-text-faint);
+    font-weight: 500;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    letter-spacing: 0.04em;
+}
+
+/* ---- Price column ---- */
+.watchlist__price-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+    flex-shrink: 0;
+}
+
+.watchlist__price {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.watchlist__change {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.watchlist__change--positive {
+    color: var(--color-positive);
+}
+
+.watchlist__change--negative {
+    color: var(--color-negative);
+}
+
+/* ---- Risk dot ---- */
+.watchlist__risk-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.watchlist__risk-dot--low {
+    background: var(--color-risk-low);
+}
+
+.watchlist__risk-dot--medium {
+    background: var(--color-risk-medium);
+}
+
+.watchlist__risk-dot--high {
+    background: var(--color-risk-high);
+}
+
+/* ---- Empty state ---- */
+.watchlist__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-2xl) var(--spacing-lg);
+    text-align: center;
+    color: var(--color-text-faint);
+}
+
+.watchlist__empty-text {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin: 0;
+}
+
+.watchlist__empty-hint {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-text-faint);
+    margin: 0;
+}
+
+/* ---- Skeleton ---- */
+.watchlist__card--skeleton {
+    pointer-events: none;
+}
+
+.watchlist__skeleton-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(90deg, var(--color-bg-input) 0%, var(--color-bg-secondary) 50%, var(--color-bg-input) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+.watchlist__skeleton-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.watchlist__skeleton-line {
+    height: 12px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, var(--color-bg-input) 0%, var(--color-bg-secondary) 50%, var(--color-bg-input) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+.watchlist__skeleton-line--sm {
+    height: 9px;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .watchlist__grid {
+        grid-template-columns: 1fr;
+    }
+}

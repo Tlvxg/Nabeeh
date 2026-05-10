@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <rect width="120" height="120" rx="24" fill="#006233"/>
+  <rect x="3" y="3" width="114" height="114" rx="21" stroke="#fff" stroke-width="2" stroke-opacity="0.15"/>
+  <!-- Stylized oil drop / shield shape -->
+  <path d="M60 22C60 22 38 48 38 68c0 12.15 9.85 22 22 22s22-9.85 22-22C82 48 60 22 60 22z" fill="#00A84F" stroke="#fff" stroke-width="2.5" stroke-opacity="0.3"/>
+  <path d="M60 30C60 30 44 50 44 66c0 8.84 7.16 16 16 16s16-7.16 16-16C76 50 60 30 60 30z" fill="#00C85D" fill-opacity="0.4"/>
+  <!-- Star accent -->
+  <circle cx="60" cy="62" r="5" fill="#fff" fill-opacity="0.9"/>
+  <!-- Text -->
+  <text x="60" y="106" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif" font-size="11" font-weight="700" letter-spacing="1">ARAMCO</text>
+</svg>

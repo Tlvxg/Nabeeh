@@ -1,0 +1,212 @@
+/* ========================================
+   NABEEH Design Tokens
+   Premium Saudi Fintech Dashboard
+   ======================================== */
+
+/* ---- Light Theme (Default) ---- */
+:root {
+    /* Brand Core */
+    --color-primary: #1a7f5a;
+    --color-primary-light: #22a06b;
+    --color-primary-dark: #0f5132;
+    --color-primary-foreground: #ffffff;
+    --color-primary-glow: rgba(26, 127, 90, 0.12);
+    --color-primary-glow-strong: rgba(26, 127, 90, 0.22);
+
+    /* Foreground colors (shadcn compatibility) */
+    --color-foreground: #0b1623;
+    --color-card-foreground: #0b1623;
+    --color-popover-foreground: #0b1623;
+    --color-secondary-foreground: #0b1623;
+    --color-muted-foreground: #5a6a78;
+    --color-accent-foreground: #0b1623;
+    --color-destructive-foreground: #ffffff;
+
+    /* Navy Palette */
+    --color-navy-dark: #0b1623;
+    --color-navy: #152638;
+    --color-navy-light: #1e3550;
+
+    /* Accent */
+    --color-accent-gold: #c98a0c;
+    --color-accent-gold-light: #e5a91b;
+
+    /* Surfaces */
+    --color-bg: #f5f6f8;
+    --color-bg-secondary: #ebedf0;
+    --color-bg-card: #ffffff;
+    --color-bg-card-solid: #ffffff;
+    --color-bg-sidebar: #ffffff;
+    --color-bg-header: rgba(255, 255, 255, 0.92);
+    --color-bg-elevated: #ffffff;
+    --color-bg-hover: rgba(26, 127, 90, 0.06);
+    --color-bg-active: rgba(26, 127, 90, 0.1);
+    --color-bg-input: #f0f2f5;
+    --color-bg-subtle: #f8f9fa;
+
+    /* Text */
+    --color-text: #0b1623;
+    --color-text-secondary: #1e3550;
+    --color-text-muted: #5a6a78;
+    --color-text-faint: #8d99a5;
+
+    /* Borders */
+    --color-border: #e2e5ea;
+    --color-border-strong: #cdd2d8;
+    --color-divider: #eef0f3;
+
+    /* Sentiment */
+    --color-positive: #1a7f5a;
+    --color-positive-bg: rgba(26, 127, 90, 0.08);
+    --color-negative: #d32f2f;
+    --color-negative-bg: rgba(211, 47, 47, 0.08);
+    --color-neutral: #7f8c8d;
+    --color-neutral-bg: rgba(127, 140, 141, 0.08);
+
+    /* Risk Levels */
+    --color-risk-low: #1a7f5a;
+    --color-risk-medium: #e5a91b;
+    --color-risk-high: #d32f2f;
+
+    /* Shadows */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.06), 0 4px 10px rgba(0, 0, 0, 0.04);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.08);
+    --shadow-glow: 0 0 0 3px rgba(26, 127, 90, 0.12);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+    --shadow-card-subtle: 0 1px 2px rgba(0, 0, 0, 0.03), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+
+    /* Card Tokens */
+    --color-card-border: #e2e5ea;
+    --gradient-card-shine: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 40%);
+
+    /* Spacing Scale */
+    --spacing-2xs: 2px;
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    --spacing-3xl: 64px;
+
+    /* Radii — sharp geometric aesthetic */
+    --radius-xs: 0;
+    --radius-sm: 0;
+    --radius-md: 0;
+    --radius-lg: 0;
+    --radius-xl: 0;
+    --radius-2xl: 0;
+    --radius-full: 0;
+
+    /* Transitions */
+    --transition-fast: 0.12s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.35s ease;
+
+    /* Layout */
+    --sidebar-width: 240px;
+    --header-height: 56px;
+}
+
+/* ---- Dark Theme ---- */
+[data-theme="dark"] {
+    --color-primary-foreground: #ffffff;
+    --color-foreground: #e6edf3;
+    --color-card-foreground: #e6edf3;
+    --color-popover-foreground: #e6edf3;
+    --color-secondary-foreground: #c9d1d9;
+    --color-muted-foreground: #8b949e;
+    --color-accent-foreground: #e6edf3;
+    --color-destructive-foreground: #ffffff;
+
+    --color-bg: #0d1117;
+    --color-bg-secondary: #161b22;
+    --color-bg-card: #161b22;
+    --color-bg-card-solid: #161b22;
+    --color-bg-sidebar: #0d1117;
+    --color-bg-header: rgba(13, 17, 23, 0.95);
+    --color-bg-elevated: #1c2128;
+    --color-bg-hover: rgba(26, 127, 90, 0.08);
+    --color-bg-active: rgba(26, 127, 90, 0.14);
+    --color-bg-input: #1c2128;
+    --color-bg-subtle: #141920;
+
+    --color-text: #e6edf3;
+    --color-text-secondary: #c9d1d9;
+    --color-text-muted: #8b949e;
+    --color-text-faint: #565d66;
+
+    --color-border: #30363d;
+    --color-border-strong: #484f58;
+    --color-divider: #21262d;
+
+    --color-positive-bg: rgba(26, 127, 90, 0.12);
+    --color-negative-bg: rgba(211, 47, 47, 0.12);
+    --color-neutral-bg: rgba(127, 140, 141, 0.12);
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 0 3px rgba(26, 127, 90, 0.2);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(48, 54, 61, 0.5);
+    --shadow-card-subtle: 0 1px 2px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(48, 54, 61, 0.3);
+    --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(26, 127, 90, 0.15);
+
+    --color-card-border: #30363d;
+    --gradient-card-shine: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 40%);
+}
+
+/* ---- Keyframes ---- */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideInFromEnd {
+    from {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

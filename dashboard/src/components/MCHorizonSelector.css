@@ -1,0 +1,122 @@
+/* ========================================
+   MC Horizon Selector -- button group
+   Follows IndicatorPeriodSelector pattern
+   ======================================== */
+
+.mc-horizon {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.mc-horizon__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text-faint);
+    white-space: nowrap;
+}
+
+.mc-horizon__btns {
+    display: flex;
+    gap: 0;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+/* ---- Individual button ---- */
+.mc-horizon__btn {
+    padding: 5px 14px;
+    border: none;
+    border-inline-end: 1px solid var(--color-border);
+    background: var(--color-bg-input);
+    color: var(--color-text-muted);
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.mc-horizon__btn:last-child {
+    border-inline-end: none;
+}
+
+.mc-horizon__btn:hover:not(:disabled) {
+    background: var(--color-bg-hover);
+    color: var(--color-text);
+}
+
+.mc-horizon__btn:active:not(:disabled) {
+    transform: scale(0.97);
+}
+
+.mc-horizon__btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ---- Active state ---- */
+.mc-horizon__btn--active {
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 700;
+}
+
+.mc-horizon__btn--active:hover {
+    background: var(--color-primary);
+    color: #fff;
+    filter: brightness(1.1);
+}
+
+/* ---- Simulating pulse animation ---- */
+.mc-horizon__btn--simulating {
+    animation: mc-horizon-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes mc-horizon-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.65;
+    }
+}
+
+/* ---- Method badge (e.g. "VaR" for 7d) ---- */
+.mc-horizon__method {
+    font-size: 0.58rem;
+    font-weight: 700;
+    margin-inline-start: 4px;
+    padding: 1px 4px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.2);
+    vertical-align: middle;
+    letter-spacing: 0.03em;
+}
+
+.mc-horizon__btn:not(.mc-horizon__btn--active) .mc-horizon__method {
+    background: var(--color-primary);
+    color: #fff;
+    opacity: 0.7;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .mc-horizon {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mc-horizon__btns {
+        width: 100%;
+    }
+
+    .mc-horizon__btn {
+        flex: 1;
+        text-align: center;
+        padding: 5px 8px;
+    }
+}

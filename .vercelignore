@@ -1,0 +1,69 @@
+# Backend (deployed separately)
+backend/
+supabase/
+
+# Vercel local build artifacts (never upload — confuses remote build)
+.vercel/output/
+.vercel/builders/
+.vercel/python/
+
+# Dependencies (Vercel installs via installCommand)
+node_modules/
+dashboard/node_modules/
+
+# Build outputs (rebuilt on Vercel)
+dist/
+dashboard/dist/
+
+# Environment files
+.env
+.env.local
+dashboard/.env.local
+backend/.env
+
+# Development files
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Large files (root-level only, not dashboard assets)
+/*.pptx
+/*.pdf
+/*.png
+photo/
+pptxxx/
+
+# Planning docs (not needed for build)
+.planning/
+
+# Accidentally-checked-in pip packages in project root
+/bin/
+/*.dist-info/
+/*.so
+/annotated_types/
+/anyio/
+/certifi/
+/charset_normalizer/
+/distro/
+/exceptiongroup/
+/h11/
+/httpcore/
+/httpx/
+/idna/
+/pydantic/
+/pydantic_core/
+/requests/
+/resend/
+/sniffio/
+/typing_inspection/
+/urllib3/
+/werkzeug/
+/typing_extensions.py
+
+# docx working copies
+/Nabeeh-Team-Roles*.docx

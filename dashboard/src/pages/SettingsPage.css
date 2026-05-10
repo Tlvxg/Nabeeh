@@ -1,0 +1,461 @@
+/* ========================================
+   Settings Page
+   ======================================== */
+
+.settings-page {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: var(--spacing-lg);
+}
+
+/* ---- Title ---- */
+.settings-page__title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text);
+    margin: 0 0 var(--spacing-lg) 0;
+}
+
+/* ---- Sections container ---- */
+.settings-page__sections {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+/* ---- Section card ---- */
+.settings-section {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-card);
+    transition: background var(--transition-normal), border-color var(--transition-normal);
+}
+
+.settings-section__title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0 0 var(--spacing-md) 0;
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 1px solid var(--color-divider);
+}
+
+/* ---- Profile section ---- */
+.settings-profile__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-sm) 0;
+}
+
+.settings-profile__row + .settings-profile__row {
+    border-top: 1px solid var(--color-divider);
+}
+
+.settings-profile__label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
+.settings-profile__value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text);
+    direction: ltr;
+    unicode-bidi: plaintext;
+}
+
+/* Plan badge */
+.settings-profile__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.6;
+}
+
+.settings-profile__badge--free {
+    background: var(--color-bg-hover);
+    color: var(--color-text-muted);
+}
+
+.settings-profile__badge--premium {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+[data-theme="dark"] .settings-profile__badge--premium {
+    background: rgba(254, 243, 199, 0.15);
+    color: #fbbf24;
+}
+
+.settings-profile__upgrade-link {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    text-decoration: none;
+    margin-inline-start: var(--spacing-sm);
+    transition: opacity var(--transition-fast);
+}
+
+.settings-profile__upgrade-link:hover {
+    opacity: 0.7;
+}
+
+/* ---- Section description ---- */
+.settings-section__desc {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin: 0 0 var(--spacing-md) 0;
+}
+
+/* ---- Subsection title ---- */
+.settings-subsection__title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+    padding-bottom: 4px;
+}
+
+.settings-subsection__title:first-of-type {
+    margin-top: 0;
+}
+
+/* ---- Notification toggle ---- */
+.settings-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+}
+
+.settings-toggle__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+}
+
+.settings-toggle__label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.settings-toggle__desc {
+    font-size: 0.78rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+}
+
+/* Custom toggle switch */
+.settings-toggle__switch {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.settings-toggle__switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.settings-toggle__track {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: var(--color-border);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.settings-toggle__track::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    inset-inline-start: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: transform var(--transition-fast);
+}
+
+.settings-toggle__switch input:checked + .settings-toggle__track {
+    background: var(--color-primary);
+}
+
+.settings-toggle__switch input:checked + .settings-toggle__track::after {
+    transform: translateX(-20px);
+}
+
+[dir="ltr"] .settings-toggle__switch input:checked + .settings-toggle__track::after {
+    transform: translateX(20px);
+}
+
+.settings-toggle__switch input:focus-visible + .settings-toggle__track {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+/* ---- Theme cards ---- */
+.settings-theme__options {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.settings-theme__card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-card);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-family: inherit;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.settings-theme__card:hover {
+    border-color: var(--color-text-faint);
+}
+
+.settings-theme__card--active {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-bg-active);
+}
+
+.settings-theme__icon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+/* ---- Analytics toggle spacing (multiple toggles in a section) ---- */
+.settings-section .settings-toggle + .settings-toggle {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--color-divider);
+}
+
+/* ---- MC Horizon selector ---- */
+.settings-horizon {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+}
+
+.settings-horizon__btn {
+    padding: 6px 14px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-card);
+    color: var(--color-text-muted);
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.settings-horizon__btn:hover {
+    border-color: var(--color-text-faint);
+    color: var(--color-text);
+}
+
+.settings-horizon__btn--active {
+    border-color: var(--color-primary);
+    background: var(--color-bg-active);
+    color: var(--color-primary);
+}
+
+/* ---- Reset button ---- */
+.settings-section__reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: var(--spacing-md);
+    padding: 6px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-muted);
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.settings-section__reset:hover {
+    border-color: var(--color-text-faint);
+    color: var(--color-text);
+    background: var(--color-bg-hover);
+}
+
+/* ---- Watchlist section ---- */
+.settings-watchlist__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.settings-watchlist__item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-md);
+    transition: background var(--transition-fast);
+}
+
+.settings-watchlist__item:hover {
+    background: var(--color-bg-hover);
+}
+
+.settings-watchlist__stock-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.settings-watchlist__stock-info a {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.settings-watchlist__stock-info a:hover {
+    color: var(--color-primary);
+}
+
+.settings-watchlist__ticker {
+    font-size: 0.72rem;
+    color: var(--color-text-faint);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    letter-spacing: 0.04em;
+}
+
+.settings-watchlist__remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: transparent;
+    color: var(--color-text-faint);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.settings-watchlist__remove:hover {
+    background: var(--color-negative-bg);
+    color: var(--color-negative);
+}
+
+.settings-watchlist__remove svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Empty state */
+.settings-watchlist__empty {
+    text-align: center;
+    padding: var(--spacing-lg);
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    line-height: 1.7;
+}
+
+/* ---- Upgrade prompt (premium gate for watchlist) ---- */
+.settings-upgrade-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-lg);
+    text-align: center;
+}
+
+.settings-upgrade-prompt__text {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin: 0;
+}
+
+.settings-upgrade-prompt__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 16px;
+    background: var(--color-primary);
+    color: #ffffff;
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 700;
+    transition: opacity var(--transition-fast);
+}
+
+.settings-upgrade-prompt__link:hover {
+    opacity: 0.85;
+}
+
+/* ---- Save indicator ---- */
+.settings-save-indicator {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.settings-save-indicator--visible {
+    opacity: 1;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .settings-page {
+        padding: var(--spacing-md);
+    }
+
+    .settings-page__title {
+        font-size: 1.25rem;
+    }
+
+    .settings-section {
+        padding: var(--spacing-md);
+    }
+
+    .settings-theme__options {
+        gap: var(--spacing-sm);
+    }
+}

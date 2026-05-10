@@ -1,0 +1,82 @@
+/* ========================================
+   Indicator Period Selector — button group
+   ======================================== */
+
+.ind-period {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.ind-period__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-text-faint);
+    white-space: nowrap;
+}
+
+.ind-period__btns {
+    display: flex;
+    gap: 0;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+/* ---- Individual button ---- */
+.ind-period__btn {
+    padding: 5px 14px;
+    border: none;
+    border-inline-end: 1px solid var(--color-border);
+    background: var(--color-bg-input);
+    color: var(--color-text-muted);
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.ind-period__btn:last-child {
+    border-inline-end: none;
+}
+
+.ind-period__btn:hover {
+    background: var(--color-bg-hover);
+    color: var(--color-text);
+}
+
+.ind-period__btn:active {
+    transform: scale(0.97);
+}
+
+.ind-period__btn--active {
+    background: var(--color-primary);
+    color: #fff;
+    font-weight: 700;
+}
+
+.ind-period__btn--active:hover {
+    background: var(--color-primary);
+    color: #fff;
+    filter: brightness(1.1);
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .ind-period {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .ind-period__btns {
+        width: 100%;
+    }
+
+    .ind-period__btn {
+        flex: 1;
+        text-align: center;
+    }
+}

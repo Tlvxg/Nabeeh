@@ -1,0 +1,49 @@
+/* ========================================
+   Dashboard Layout
+   ======================================== */
+
+.dashboard-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    transition: background-color var(--transition-normal);
+}
+
+.dashboard-layout__body {
+    display: flex;
+    flex: 1;
+}
+
+.dashboard-layout__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: var(--spacing-xl);
+    min-height: calc(100vh - var(--header-height));
+}
+
+.dashboard-layout__page-transition {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    animation: pageEnter 0.25s ease both;
+}
+
+/* Push footer disclaimer to bottom when content is short */
+.dashboard-layout__content > .disclaimer--footer {
+    margin-top: auto;
+}
+
+@media (max-width: 1200px) {
+    .dashboard-layout__content {
+        padding: var(--spacing-lg);
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-layout__content {
+        padding: var(--spacing-md);
+    }
+}

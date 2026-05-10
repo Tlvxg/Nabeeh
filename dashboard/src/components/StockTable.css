@@ -1,0 +1,277 @@
+/* ========================================
+   StockTable — sortable stock data table
+   ======================================== */
+
+.stock-table__container {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+}
+
+.stock-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+/* ---- Column widths via colgroup ---- */
+.stock-table__col--stock     { width: 28%; }
+.stock-table__col--sector    { width: 18%; }
+.stock-table__col--price     { width: 13%; }
+.stock-table__col--change    { width: 11%; }
+.stock-table__col--marketcap { width: 17%; }
+.stock-table__col--risk      { width: 13%; }
+
+/* ---- Header ---- */
+.stock-table__header-row {
+    background: var(--color-bg-secondary);
+}
+
+.stock-table__th {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-align: start;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: color var(--transition-fast);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--color-bg-secondary);
+}
+
+.stock-table__th:hover {
+    color: var(--color-text);
+}
+
+.stock-table__th--active {
+    color: var(--color-primary);
+}
+
+/* ---- Body rows ---- */
+.stock-table__row {
+    border-bottom: 1px solid var(--color-divider);
+    transition: background var(--transition-fast);
+}
+
+.stock-table__row:last-child {
+    border-bottom: none;
+}
+
+.stock-table__row:hover {
+    background: var(--color-bg-hover);
+}
+
+.stock-table__td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.85rem;
+    color: var(--color-text);
+    vertical-align: middle;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- Stock column (logo + name + ticker) ---- */
+.stock-table__cell--stock {
+    padding: 0; /* padding inside the link instead */
+}
+
+.stock-table__row-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-decoration: none;
+    color: inherit;
+    min-width: 0; /* allow flex children to shrink */
+}
+
+.stock-table__stock-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0; /* allow text to shrink and ellipsis */
+}
+
+.stock-table__stock-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stock-table__stock-ticker {
+    font-size: 0.7rem;
+    color: var(--color-text-faint);
+    font-weight: 500;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    letter-spacing: 0.04em;
+}
+
+/* ---- Sector column ---- */
+.stock-table__cell--sector {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ---- Price column ---- */
+.stock-table__cell--price {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ---- Change column ---- */
+.stock-table__cell--change {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.stock-table__change--positive {
+    color: var(--color-positive);
+}
+
+.stock-table__change--negative {
+    color: var(--color-negative);
+}
+
+/* ---- Market cap column ---- */
+.stock-table__cell--marketcap {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+}
+
+/* ---- Risk column ---- */
+.stock-table__cell--risk {
+    white-space: nowrap;
+}
+
+.stock-table__risk-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stock-table__risk-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-text-faint);
+    flex-shrink: 0;
+}
+
+.stock-table__risk-dot--low { background: var(--color-risk-low); }
+.stock-table__risk-dot--medium { background: var(--color-risk-medium); }
+.stock-table__risk-dot--high { background: var(--color-risk-high); }
+
+.stock-table__risk-score {
+    font-weight: 700;
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.stock-table__risk-label {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+/* ---- Empty state ---- */
+.stock-table__empty {
+    padding: var(--spacing-2xl) var(--spacing-lg);
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--radius-lg);
+}
+
+/* ---- Skeleton loading ---- */
+.stock-table__row--skeleton .stock-table__td {
+    padding: var(--spacing-md) var(--spacing-md);
+}
+
+.stock-table__row--skeleton .stock-table__cell--stock {
+    padding: var(--spacing-md) var(--spacing-md);
+}
+
+.stock-table__skeleton-wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.stock-table__skeleton-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(90deg, var(--color-bg-input) 0%, var(--color-bg-secondary) 50%, var(--color-bg-input) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+.stock-table__skeleton-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stock-table__skeleton-line {
+    height: 12px;
+    border-radius: var(--radius-xs);
+    background: linear-gradient(90deg, var(--color-bg-input) 0%, var(--color-bg-secondary) 50%, var(--color-bg-input) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+.stock-table__skeleton-line--sm {
+    height: 9px;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .stock-table__container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .stock-table {
+        min-width: 520px;
+    }
+
+    .stock-table__col--sector {
+        width: 0;
+    }
+
+    .stock-table__cell--sector {
+        display: none;
+    }
+
+    /* Hide sector + market cap columns on mobile */
+    .stock-table__th:nth-child(2),
+    .stock-table__th:nth-child(5) {
+        display: none;
+    }
+    .stock-table__td:nth-child(2),
+    .stock-table__td:nth-child(5) {
+        display: none;
+    }
+
+    .stock-table__col--stock     { width: 40%; }
+    .stock-table__col--price     { width: 22%; }
+    .stock-table__col--change    { width: 18%; }
+    .stock-table__col--marketcap { display: none; }
+    .stock-table__col--risk      { width: 20%; }
+}

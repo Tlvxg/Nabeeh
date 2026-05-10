@@ -1,0 +1,20 @@
+/* ========================================
+   StockLogo Component
+   ======================================== */
+
+.stock-logo {
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
+.stock-logo--fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #fff;
+    font-weight: 800;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    letter-spacing: 0.04em;
+    line-height: 1;
+}

@@ -1,0 +1,167 @@
+/* ========================================
+   Company Info Card — Arabic name, ticker, sector, description
+   ======================================== */
+
+/* ---- Container ---- */
+.company-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+/* ---- Header row (names on one side, ticker/sector on the other) ---- */
+.company-info__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.company-info__names {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    min-width: 0;
+}
+
+.company-info__name-ar {
+    margin: 0;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.3;
+    color: var(--color-text);
+}
+
+.company-info__name-en {
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    letter-spacing: 0.01em;
+}
+
+.company-info__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--spacing-xs);
+    flex-shrink: 0;
+}
+
+.company-info__ticker {
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text);
+    background: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 2px var(--spacing-sm);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+}
+
+.company-info__sector {
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+}
+
+/* ---- Description paragraph ---- */
+.company-info__description {
+    margin: 0;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1.7;
+    color: var(--color-text);
+    padding-block-start: var(--spacing-sm);
+    border-block-start: 1px solid var(--color-border);
+}
+
+.company-info__description--empty {
+    color: var(--color-text-muted);
+    font-style: italic;
+    font-weight: 400;
+}
+
+/* ---- Skeleton loading state ---- */
+.company-info__skeleton {
+    height: 14px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(90deg, var(--color-bg-input) 0%, var(--color-bg-secondary) 50%, var(--color-bg-input) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+.company-info__skeleton--title {
+    height: 22px;
+    width: 55%;
+    margin-block-end: var(--spacing-xs);
+}
+
+.company-info__skeleton--short {
+    width: 35%;
+}
+
+/* ---- Market cap stat ---- */
+.company-info__stat {
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--color-divider);
+}
+
+.company-info__stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.company-info__stat-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
+.company-info__stat-value {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.company-info__stat-note {
+    font-size: 0.78rem;
+    color: var(--color-text-faint);
+    line-height: 1.6;
+    margin: var(--spacing-xs) 0 0;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+    .company-info {
+        padding: var(--spacing-md);
+    }
+
+    .company-info__name-ar {
+        font-size: 1.15rem;
+    }
+
+    .company-info__description {
+        font-size: 0.9rem;
+        line-height: 1.65;
+    }
+
+    .company-info__meta {
+        align-items: flex-start;
+        flex-direction: row;
+    }
+}
