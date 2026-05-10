@@ -1,17 +1,61 @@
 #!/usr/bin/env python3
-"""Seed the stocks table with Aramco data."""
+"""Seed the stocks table with the 4 covered Tadawul stocks.
+
+Idempotent: safe to run multiple times. Existing rows are updated by symbol.
+
+Usage:
+    SUPABASE_URL=... SUPABASE_SERVICE_KEY=... python scripts/seed_stocks.py
+"""
 
 import os
 import sys
 
-# Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from supabase import create_client
 
 
-def seed_stocks():
-    """Insert Aramco into the stocks table."""
+STOCKS = [
+    {
+        "symbol": "2222",
+        "name_ar": "أرامكو السعودية",
+        "name_en": "Saudi Aramco",
+        "sector_ar": "الطاقة",
+        "sector_en": "Energy",
+        "currency": "SAR",
+        "is_active": True,
+    },
+    {
+        "symbol": "2010",
+        "name_ar": "سابك",
+        "name_en": "SABIC",
+        "sector_ar": "المواد الأساسية",
+        "sector_en": "Materials",
+        "currency": "SAR",
+        "is_active": True,
+    },
+    {
+        "symbol": "1120",
+        "name_ar": "مصرف الراجحي",
+        "name_en": "Al Rajhi Bank",
+        "sector_ar": "البنوك",
+        "sector_en": "Banking",
+        "currency": "SAR",
+        "is_active": True,
+    },
+    {
+        "symbol": "7010",
+        "name_ar": "الاتصالات السعودية",
+        "name_en": "STC",
+        "sector_ar": "الاتصالات",
+        "sector_en": "Telecom",
+        "currency": "SAR",
+        "is_active": True,
+    },
+]
+
+
+def seed_stocks() -> None:
     url = os.environ.get("SUPABASE_URL")
     key = os.environ.get("SUPABASE_SERVICE_KEY")
 
@@ -23,27 +67,18 @@ def seed_stocks():
 
     client = create_client(url, key)
 
-    # Seed Aramco
-    aramco = {
-        "symbol": "2222",
-        "name_ar": "أرامكو السعودية",
-        "name_en": "Saudi Aramco",
-        "sector_ar": "الطاقة",
-        "sector_en": "Energy",
-        "currency": "SAR",
-        "is_active": True,
-    }
-
     result = (
         client.table("stocks")
-        .upsert(aramco, on_conflict="symbol")
+        .upsert(STOCKS, on_conflict="symbol")
         .execute()
     )
 
     if result.data:
-        print(f"Seeded stock: {result.data[0]['name_en']} ({result.data[0]['symbol']})")
+        print(f"Seeded {len(result.data)} stocks:")
+        for row in result.data:
+            print(f"  {row['symbol']}  {row['name_en']}")
     else:
-        print("Seed operation completed (may already exist)")
+        print("Upsert returned no rows (already current)")
 
 
 if __name__ == "__main__":

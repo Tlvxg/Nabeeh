@@ -492,8 +492,6 @@ flowchart LR
   root --> cfg[config files]
 
   scripts --> build["build.sh<br/>Vercel build entry"]
-  scripts --> seed["seed_stocks.py<br/>insert 4 tickers"]
-  scripts --> seed2["seed_stock_descriptions.py<br/>fill description_ar"]
   scripts --> verify["verify_pipeline.py<br/>smoke test all stages"]
 
   cfg --> vercel["vercel.json<br/>SPA + serverless routing"]
@@ -507,14 +505,12 @@ flowchart LR
 
 **What this shows.** The two boxes you might touch outside the main folders: the operational scripts at the repo root, and the platform config files.
 
-**The four scripts.**
+**The two scripts.**
 
 - `build.sh` — Vercel runs this on every deploy. It runs `npm ci` and `npm run build` inside `dashboard/` and moves the output to `dist/`. The other Vercel-side config (output directory, install command) is in `vercel.json`.
-- `seed_stocks.py` — inserts the 4 covered Tadawul tickers into the `stocks` table. Run once after creating a fresh Supabase project. Idempotent.
-- `seed_stock_descriptions.py` — populates the `description_ar` column for each stock so the dashboard can show a short company blurb.
 - `verify_pipeline.py` — runs each scheduler job once and prints row counts per table. The fastest way to check if a fresh setup is wired correctly end-to-end.
 
-> **Heads up on `apply_v3_migrations.sql`**: this file in `scripts/` is a one-shot snapshot from an earlier schema cut. The canonical schema lives in `supabase/migrations/`. The SQL file is kept only for historical reference and can be safely deleted on a future cleanup pass.
+> **Where is the seed script?** The canonical seed script lives at `backend/scripts/seed_stocks.py`. Run it once from the `backend/` folder after creating a fresh Supabase project — it inserts the 4 covered Tadawul tickers (2222, 2010, 1120, 7010).
 
 > **Can the whole `scripts/` folder be deleted?** No. `build.sh` is the entry point Vercel runs on every deploy (`vercel.json` line 2: `"buildCommand": "bash scripts/build.sh"`). Deleting the folder would break Vercel deploys.
 

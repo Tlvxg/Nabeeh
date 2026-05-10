@@ -1,4 +1,4 @@
-"""Pipeline data completeness verification for all 10 Tadawul stocks.
+"""Pipeline data completeness verification for the 4 covered Tadawul stocks.
 
 Checks all 7 pipeline tables (PIPE-01 through PIPE-07) for data presence
 and quality thresholds. Also verifies the cron schedule in scheduler.py
