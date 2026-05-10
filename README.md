@@ -113,7 +113,7 @@ sequenceDiagram
     participant SCHED as APScheduler
     participant BE as FastAPI Backend
     participant YF as yfinance
-    participant ARG as Argaam + GNews
+    participant ARG as Argaam
     participant OR as OpenRouter
     participant DB as Supabase Postgres
     participant RS as Resend
