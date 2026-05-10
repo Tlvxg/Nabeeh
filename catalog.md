@@ -61,7 +61,6 @@ backend/
 ├── .env.example         Documented environment variables
 ├── app/                 Application code
 ├── scripts/             One-shot Python utilities
-├── tests/               pytest suite
 └── models/              Pre-cached MARBERT tokenizer files
 ```
 
@@ -110,18 +109,6 @@ Procedures invoked by the scheduler (and by `verify_pipeline.py`). Each one is t
 |------|---------|
 | `seed_stocks.py` | Insert the 4 covered Tadawul stocks into the `stocks` table (idempotent). Run once after migrations. |
 | `backfill_risk_notes.py` | One-shot: walk every active stock, build a `RiskNoteInput` from the latest two `risk_metrics`, call `notes.service.generate()` to populate `risk_notes`. Useful right after launch when the dashboard would otherwise show "no AI note yet". |
-
-### `backend/tests/`
-
-Pytest suite. Tests are organized per use case — naming pattern `test_un<NN>_<feature>.py`.
-
-| File | Covers |
-|------|--------|
-| `test_un01_search.py` | Stock search (UN-01) |
-| `test_un02_risk_level.py` | Risk-level computation (UN-02) |
-| `test_un03_risk_explanation.py` | AI risk-note generation + fallback (UN-03) |
-
-Run with `pytest backend/tests` (from repo root, with the backend venv activated).
 
 ### `backend/models/`
 

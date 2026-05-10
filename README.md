@@ -132,9 +132,9 @@ flowchart TD
         J5["PIPE-05/06/07 · 12:40 UTC<br/>compute_risk + Monte Carlo<br/>+ alerts + AI notes"]
     end
 
-    subgraph DB[(Supabase Postgres)]
+    subgraph DB["Supabase Postgres"]
         T1[("daily_prices")]
-        T2[("stock_stats<br/>+ pivot levels")]
+        T2[("stock_stats + pivots")]
         T3[("news_articles")]
         T4[("sentiment_scores")]
         T5[("risk_metrics")]
@@ -561,7 +561,6 @@ nabeeh/
 │   │   ├── database.py     Dual Supabase clients (anon + service role)
 │   │   └── config.py       Pydantic Settings
 │   ├── scripts/            seed_stocks.py, backfill_risk_notes.py
-│   ├── tests/              pytest suite
 │   ├── Dockerfile
 │   └── railway.toml
 ├── dashboard/              React 19 + Vite SPA
