@@ -84,7 +84,7 @@ Each module is self-contained: `router.py` (FastAPI routes), `service.py` (busin
 |--------|-------|--------------|
 | `prices/` | `router`, `service`, `repository`, `schemas`, `providers/{base,factory,yfinance_provider}` | Pluggable market-data providers (currently `yfinance`); upserts `daily_prices`. |
 | `risk/` | `router`, `service`, `repository`, `schemas` | VaR (historical + parametric), CVaR, GARCH(1,1), Sharpe/Sortino, beta, max drawdown, Monte Carlo (10 000-path GBM). |
-| `news/` | `router`, `service`, `repository`, `schemas` | Argaam RSS (5 feeds + company pages) + GNews; Arabic-keyword stock matching; dedup on `(source, headline_ar)`. |
+| `news/` | `router`, `service`, `repository`, `schemas` | Argaam RSS (5 feeds) and Argaam per-company news pages; Arabic-keyword stock matching; dedup on `(source, headline_ar)`. |
 | `sentiment/` | `router`, `service`, `repository`, `schemas`, `model` | MARBERTv2 → ONNX Runtime; financial keyword boost layer; batch inference (16 articles). |
 | `assistant/` | `router`, `service`, `schemas` | OpenRouter (DeepSeek) chat with real-time stock context. |
 | `alerts/` | `service`, `schemas`, `template`, `threading` | Composes Resend emails; RFC-5322 deterministic `Message-ID` per `(user, symbol)` so successive alerts thread. **Internal — no router.** |

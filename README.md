@@ -83,7 +83,7 @@ On first backend startup, the MARBERTv2 Arabic sentiment model downloads from Hu
 │  PostgreSQL DB       │◄────────│  FastAPI Backend                 │
 │  Auth (users)        │         │  ├── prices module (yfinance)    │
 │  Row-Level Security  │         │  ├── risk module (VaR, GARCH, MC)│
-│                      │         │  ├── news module (Argaam, GNews) │
+│                      │         │  ├── news module (Argaam RSS)    │
 │  Tables:             │         │  ├── sentiment (MARBERTv2 ONNX)  │
 │  - stocks            │         │  ├── assistant (DeepSeek chat)   │
 │  - daily_prices      │         │  ├── alerts (Resend + threading) │
@@ -97,7 +97,6 @@ On first backend startup, the MARBERTv2 Arabic sentiment model downloads from Hu
 │  - user_watchlist    │             │   External APIs    │
 └──────────────────────┘             │  - yfinance        │
                                      │  - Argaam RSS      │
-                                     │  - GNews API       │
                                      │  - OpenRouter      │
                                      │  - Resend (email)  │
                                      └────────────────────┘
@@ -113,7 +112,7 @@ sequenceDiagram
     participant SCHED as APScheduler
     participant BE as FastAPI Backend
     participant YF as yfinance
-    participant ARG as Argaam
+    participant ARG as Argaam (RSS + pages)
     participant OR as OpenRouter
     participant DB as Supabase Postgres
     participant RS as Resend
@@ -133,7 +132,7 @@ sequenceDiagram
 
     Note over SCHED,DB: Stage 3: PIPE-02/03 news + sentiment (every 30 min, all days)
     SCHED->>BE: trigger news_pipeline
-    BE->>ARG: fetch RSS feeds and GNews
+    BE->>ARG: fetch 5 RSS feeds + 4 company pages
     ARG-->>BE: articles
     BE->>DB: INSERT news_articles (dedup by source + headline)
     BE->>DB: SELECT articles where is_analyzed = false
@@ -210,8 +209,8 @@ This stage runs on a faster cadence because news doesn't follow Tadawul trading 
 | Step | What's happening |
 |------|------------------|
 | 9 | Every 30 minutes the scheduler triggers the `news_pipeline` job. This one runs on Fridays and Saturdays too because Argaam publishes outside Tadawul hours. |
-| 10 | The backend pulls articles from three places: 5 Argaam RSS feeds, the Argaam company pages, and GNews. |
-| 11 | Those sources return the article headlines and metadata. |
+| 10 | The backend pulls articles from Argaam: 5 RSS feeds (general market, market pulse, companies, analysis and reports, petrochemicals and industry) plus the per-company news pages for the 4 covered stocks. |
+| 11 | Argaam returns the article headlines, dates, and links. |
 | 12 | The backend saves new articles into the `news_articles` table. Duplicates are blocked by a database constraint on (source, headline). |
 | 13 | The backend asks the database for any articles that have not been scored yet (`is_analyzed = false`). This guarantees the same article is never analyzed twice. |
 | 14 | The database returns the unscored articles. |
@@ -277,7 +276,7 @@ This is the live request path. Most reads go straight from the React frontend to
 | ML Model | MARBERTv2 (Arabic sentiment) on ONNX Runtime, CPU |
 | AI Chat and Notes | OpenRouter, DeepSeek-v4-pro |
 | Market Data | yfinance (Tadawul OHLCV + TASI index) |
-| News Sources | Argaam RSS (5 feeds + company pages), GNews API |
+| News Sources | Argaam RSS (5 feeds) + Argaam company news pages |
 | Email | Resend API (RFC-5322 thread-aware alerts) |
 | Scheduler | APScheduler, cron triggers aligned to Tadawul hours |
 | Hosting | Vercel (frontend + serverless), Railway (backend Docker) |
@@ -384,7 +383,7 @@ Located in [`backend/app/modules/`](backend/app/modules/).
 |--------|---------|------------|
 | `prices/` | Fetch OHLCV from yfinance, store in `daily_prices`, compute stats and pivot levels. | yes |
 | `risk/` | VaR (historical and parametric), CVaR, GARCH(1,1), Monte Carlo (10,000 paths), Sharpe, Sortino, beta, max drawdown. | yes |
-| `news/` | Argaam RSS, Argaam company pages, GNews API. Arabic-keyword stock matching, dedup on `(source, headline_ar)`. | yes |
+| `news/` | Argaam RSS feeds and Argaam company news pages. Arabic-keyword stock matching, dedup on `(source, headline_ar)`. | yes |
 | `sentiment/` | MARBERTv2 on ONNX Runtime, financial keyword boost layer, batch inference (16 articles per batch). | yes |
 | `assistant/` | OpenRouter (DeepSeek) chat with real-time stock context (price, risk, sentiment, news). | yes |
 | `alerts/` | Email alert composition, RFC-5322 threading, Resend send. | internal |
@@ -398,7 +397,7 @@ Defined in [`backend/app/scheduler.py`](backend/app/scheduler.py). Times are in 
 |-----|----------|----------|-------|--------|
 | `fetch_prices` | cron 12:30, Sun to Thu | PIPE-01 | yfinance | `daily_prices` |
 | `compute_stats_and_pivots` | cron 12:35, Sun to Thu | PIPE-04 | `daily_prices` | `stock_stats` |
-| `news_pipeline` | every 30 min, all days | PIPE-02 + PIPE-03 | Argaam, GNews, `news_articles` | `news_articles`, `sentiment_scores` |
+| `news_pipeline` | every 30 min, all days | PIPE-02 + PIPE-03 | Argaam RSS + company pages, `news_articles` | `news_articles`, `sentiment_scores` |
 | `compute_risk` | cron 12:40, Sun to Thu | PIPE-05 + PIPE-06 + PIPE-07 | `daily_prices`, `stock_stats`, `sentiment_scores` | `risk_metrics`, `risk_notes`, `sent_alerts` |
 
 Both `compute_stats_and_pivots` and `compute_risk` call `_has_fresh_prices(stock_id)` first. They skip the stock if no price row exists from the last 5 calendar days.
@@ -442,7 +441,6 @@ Outgoing alerts are persisted in `sent_alerts` for auditability and to construct
 - Python 3.10 or newer
 - A free Supabase account (https://supabase.com)
 - A free OpenRouter account (https://openrouter.ai). Required for the AI assistant and AI risk notes.
-- (optional) A GNews API key (https://gnews.io). Without it, only Argaam supplies news.
 - (optional) A Resend API key (https://resend.com). Without it, email alerts are skipped silently.
 
 ### 1. Supabase setup
@@ -464,7 +462,7 @@ cp .env.example .env
 # Edit .env and fill in:
 #   SUPABASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_KEY
 #   OPENROUTER_API_KEY
-#   (optionally) GNEWS_API_KEY, RESEND_API_KEY
+#   (optionally) RESEND_API_KEY
 
 # Insert the 4 covered Tadawul stocks
 python scripts/seed_stocks.py
@@ -518,9 +516,6 @@ FRONTEND_URL=http://localhost:5173
 
 # AI Assistant (required, DeepSeek via OpenRouter)
 OPENROUTER_API_KEY=your-openrouter-api-key
-
-# News (optional)
-GNEWS_API_KEY=
 
 # Email Alerts (optional, Resend)
 RESEND_API_KEY=
