@@ -108,76 +108,73 @@ On first backend startup, the MARBERTv2 Arabic sentiment model downloads from Hu
 How a single trading day flows through the system:
 
 ```mermaid
-flowchart TD
-    subgraph EXT["External Sources"]
-        YF["yfinance<br/>OHLCV + TASI"]
-        ARG["Argaam RSS<br/>5 feeds + company pages"]
-        GN["GNews API<br/>Saudi business"]
-        OR["OpenRouter<br/>DeepSeek-v4-pro"]
-        RS["Resend SMTP"]
+sequenceDiagram
+    autonumber
+    participant SCHED as APScheduler
+    participant BE as FastAPI Backend
+    participant YF as yfinance
+    participant ARG as Argaam + GNews
+    participant OR as OpenRouter
+    participant DB as Supabase Postgres
+    participant RS as Resend
+    participant FE as React Frontend
+
+    rect rgb(255, 243, 224)
+    Note over SCHED,DB: PIPE-01, 12:30 UTC, Sun to Thu, fetch_prices
+    SCHED->>BE: trigger fetch_prices
+    BE->>YF: GET OHLCV for 4 stocks + TASI
+    YF-->>BE: prices
+    BE->>DB: UPSERT daily_prices
     end
 
-    subgraph SCHED["APScheduler (Sun to Thu)"]
-        J1["PIPE-01, 12:30 UTC<br/>fetch_prices"]
-        J4["PIPE-04, 12:35 UTC<br/>compute_stats + pivots"]
-        J2["PIPE-02/03, every 30 min<br/>fetch_news + analyze_sentiment"]
-        J5["PIPE-05/06/07, 12:40 UTC<br/>compute_risk + Monte Carlo<br/>+ alerts + AI notes"]
+    rect rgb(227, 242, 253)
+    Note over SCHED,DB: PIPE-04, 12:35 UTC, Sun to Thu, compute_stats + pivots
+    SCHED->>BE: trigger compute_stats_and_pivots
+    BE->>DB: SELECT daily_prices (fresh-prices gate)
+    DB-->>BE: rows
+    BE->>DB: UPSERT stock_stats (vol, VaR, pivots, 52w range)
     end
 
-    subgraph DB["Supabase Postgres"]
-        T1[("daily_prices")]
-        T2[("stock_stats + pivots")]
-        T3[("news_articles")]
-        T4[("sentiment_scores")]
-        T5[("risk_metrics")]
-        T6[("risk_notes")]
-        T7[("sent_alerts")]
+    rect rgb(243, 229, 245)
+    Note over SCHED,DB: PIPE-02/03, every 30 min, news + sentiment
+    SCHED->>BE: trigger news_pipeline
+    BE->>ARG: fetch RSS feeds and GNews
+    ARG-->>BE: articles
+    BE->>DB: INSERT news_articles (dedup by source + headline)
+    BE->>DB: SELECT articles where is_analyzed = false
+    DB-->>BE: unanalyzed rows
+    BE->>BE: MARBERT ONNX inference (batch of 16)
+    BE->>DB: INSERT sentiment_scores
     end
 
-    subgraph FE["Frontend (React SPA)"]
-        DASH["Dashboard<br/>/dashboard"]
-        DETAIL["Stock Detail<br/>/stock/:symbol"]
-        CHAT["AI Assistant<br/>/chat"]
-        NEWS["News Feed<br/>/news"]
+    rect rgb(232, 245, 233)
+    Note over SCHED,RS: PIPE-05/06/07, 12:40 UTC, Sun to Thu, risk + AI note + alert
+    SCHED->>BE: trigger compute_risk
+    BE->>DB: SELECT stats, sentiment, prices
+    DB-->>BE: rows
+    BE->>BE: VaR + Monte Carlo + composite score
+    BE->>OR: prompt for Arabic risk note
+    OR-->>BE: JSON note
+    BE->>BE: validate (Arabic ratio, digits, banned tokens)
+    BE->>DB: UPSERT risk_metrics + risk_notes
+    alt risk_score_delta >= 5
+        BE->>RS: send threaded email (RFC-5322 Message-ID)
+        RS-->>BE: delivery ack
+        BE->>DB: INSERT sent_alerts
+    else risk_score_delta < 5
+        Note right of BE: email skipped, DB row still written
+    end
     end
 
-    YF --> J1
-    J1 --> T1
-    T1 -.fresh-prices gate.-> J4
-    J4 --> T2
-
-    ARG --> J2
-    GN --> J2
-    J2 --> T3
-    T3 --> J2
-    J2 --> T4
-
-    T1 -.fresh-prices gate.-> J5
-    T2 --> J5
-    T4 --> J5
-    J5 --> T5
-    OR --> J5
-    J5 --> T6
-    J5 --> RS
-    RS --> T7
-
-    T1 --> DASH
-    T2 --> DETAIL
-    T3 --> NEWS
-    T4 --> NEWS
-    T5 --> DASH
-    T5 --> DETAIL
-    T6 --> DETAIL
-    OR --> CHAT
-
-    classDef ext fill:#fff3e0,stroke:#e65100,color:#000
-    classDef sched fill:#e3f2fd,stroke:#1565c0,color:#000
-    classDef db fill:#f3e5f5,stroke:#6a1b9a,color:#000
-    classDef fe fill:#e8f5e9,stroke:#2e7d32,color:#000
-    class YF,ARG,GN,OR,RS ext
-    class J1,J2,J4,J5 sched
-    class T1,T2,T3,T4,T5,T6,T7 db
-    class DASH,DETAIL,CHAT,NEWS fe
+    rect rgb(255, 253, 231)
+    Note over FE,OR: User browses dashboard or chats
+    FE->>DB: SELECT via Supabase JS SDK (RLS public read)
+    DB-->>FE: market data
+    FE->>BE: POST /api/v1/assistant/chat
+    BE->>OR: chat with stock context
+    OR-->>BE: reply
+    BE-->>FE: reply
+    end
 ```
 
 Key behaviors:
