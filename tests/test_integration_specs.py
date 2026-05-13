@@ -6,7 +6,6 @@ insert, update, or delete real Supabase rows.
 
 from types import SimpleNamespace
 import logging
-import sys
 
 import httpx
 import pytest
@@ -221,29 +220,36 @@ async def test_it04_assistant_uses_risk_module_for_beginner_arabic_explanation(
         assert symbol == "1120"
         return None
 
-    class FakeCompletions:
-        async def create(self, **kwargs):
-            system_prompt = kwargs["messages"][0]["content"]
+    assistant_reply = (
+        "مستوى الخطر مرتفع لأن السهم يتحرك بقوة وقد يسبب خسارة "
+        "يومية واضحة. الفكرة ببساطة: راقب التغيرات ولا تعتمد على خبر واحد."
+    )
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {"choices": [{"message": {"content": assistant_reply}}]}
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def post(self, url, json=None, headers=None):
+            assert "openrouter.ai" in url
+            system_prompt = json["messages"][0]["content"]
             assert "VaR 95%" in system_prompt
             assert "التقلب" in system_prompt
-            return SimpleNamespace(
-                choices=[
-                    SimpleNamespace(
-                        message=SimpleNamespace(
-                            content=(
-                                "مستوى الخطر مرتفع لأن السهم يتحرك بقوة وقد يسبب خسارة "
-                                "يومية واضحة. الفكرة ببساطة: راقب التغيرات ولا تعتمد على خبر واحد."
-                            )
-                        )
-                    )
-                ]
-            )
+            return FakeResponse()
 
-    class FakeAsyncGroq:
-        def __init__(self, api_key):
-            self.chat = SimpleNamespace(completions=FakeCompletions())
-
-    monkeypatch.setattr(assistant_service.settings, "GROQ_API_KEY", "test-key")
+    monkeypatch.setattr(assistant_service.settings, "OPENROUTER_API_KEY", "test-key")
     monkeypatch.setattr(
         "app.modules.prices.service.get_current_price",
         fake_get_current_price,
@@ -253,7 +259,7 @@ async def test_it04_assistant_uses_risk_module_for_beginner_arabic_explanation(
         fake_get_stock_by_symbol,
     )
     monkeypatch.setattr(risk_service, "get_risk_metrics", fake_get_risk_metrics)
-    monkeypatch.setitem(sys.modules, "groq", SimpleNamespace(AsyncGroq=FakeAsyncGroq))
+    monkeypatch.setattr(assistant_service.httpx, "AsyncClient", FakeAsyncClient)
 
     result = await assistant_service.chat("اشرح لي خطر سهم الراجحي ببساطة", symbol="1120")
     reply = result["reply"]

@@ -1,11 +1,58 @@
 """Backend unit tests matching UN04-UN07 from the project report."""
 
 from decimal import Decimal
-import sys
 from types import SimpleNamespace
 
 import pandas as pd
 import pytest
+
+
+def _fake_openrouter_client(reply_text: str, assert_payload=None):
+    """Build a fake httpx.AsyncClient that returns one OpenRouter response.
+
+    The assistant module calls:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(URL, json=payload, headers=headers)
+            resp.raise_for_status()
+            data = resp.json()
+
+    So the fake needs:
+      - async context manager support
+      - an async .post() that records the request and returns a response
+      - a response with .raise_for_status() and .json() returning OpenRouter shape
+    """
+    captured = {}
+
+    class FakeResponse:
+        def raise_for_status(self):
+            return None
+
+        def json(self):
+            return {
+                "choices": [
+                    {"message": {"content": reply_text}}
+                ]
+            }
+
+    class FakeAsyncClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        async def post(self, url, json=None, headers=None):
+            captured["url"] = url
+            captured["json"] = json
+            captured["headers"] = headers
+            if assert_payload is not None:
+                assert_payload(url, json, headers)
+            return FakeResponse()
+
+    return FakeAsyncClient, captured
 
 
 @pytest.mark.asyncio
@@ -83,26 +130,19 @@ async def test_un06_assistant_returns_response_about_saudi_stock(monkeypatch):
             "context_used": ["current_price"],
         }
 
-    class FakeCompletions:
-        async def create(self, **kwargs):
-            return SimpleNamespace(
-                choices=[
-                    SimpleNamespace(
-                        message=SimpleNamespace(
-                            content="سهم الراجحي يظهر حركة إيجابية اليوم، والتحليل هنا تعليمي فقط."
-                        )
-                    )
-                ]
-            )
+    def _assert_payload(url, payload, headers):
+        assert "openrouter.ai" in url
+        assert headers["Authorization"] == "Bearer test-key"
+        assert payload["messages"][-1]["role"] == "user"
 
-    class FakeAsyncGroq:
-        def __init__(self, api_key):
-            assert api_key == "test-key"
-            self.chat = SimpleNamespace(completions=FakeCompletions())
+    fake_client_cls, _ = _fake_openrouter_client(
+        "سهم الراجحي يظهر حركة إيجابية اليوم، والتحليل هنا تعليمي فقط.",
+        assert_payload=_assert_payload,
+    )
 
-    monkeypatch.setattr(service.settings, "GROQ_API_KEY", "test-key")
+    monkeypatch.setattr(service.settings, "OPENROUTER_API_KEY", "test-key")
     monkeypatch.setattr(service, "gather_context", fake_gather_context)
-    monkeypatch.setitem(sys.modules, "groq", SimpleNamespace(AsyncGroq=FakeAsyncGroq))
+    monkeypatch.setattr(service.httpx, "AsyncClient", fake_client_cls)
 
     result = await service.chat("ما تقييم سهم الراجحي؟", symbol="1120")
 
@@ -120,26 +160,14 @@ async def test_un07_assistant_explanation_is_short_clear_and_without_jargon(monk
         "راقب تغير السعر والأخبار، ولا تعتمد على عامل واحد فقط."
     )
 
-    class FakeCompletions:
-        async def create(self, **kwargs):
-            return SimpleNamespace(
-                choices=[
-                    SimpleNamespace(
-                        message=SimpleNamespace(content=beginner_reply)
-                    )
-                ]
-            )
-
-    class FakeAsyncGroq:
-        def __init__(self, api_key):
-            self.chat = SimpleNamespace(completions=FakeCompletions())
+    fake_client_cls, _ = _fake_openrouter_client(beginner_reply)
 
     async def fake_gather_context(symbol):
         return {"context_used": []}
 
-    monkeypatch.setattr(service.settings, "GROQ_API_KEY", "test-key")
+    monkeypatch.setattr(service.settings, "OPENROUTER_API_KEY", "test-key")
     monkeypatch.setattr(service, "gather_context", fake_gather_context)
-    monkeypatch.setitem(sys.modules, "groq", SimpleNamespace(AsyncGroq=FakeAsyncGroq))
+    monkeypatch.setattr(service.httpx, "AsyncClient", fake_client_cls)
 
     result = await service.chat("اشرح مخاطر السهم للمبتدئين", symbol="1120")
     reply = result["reply"]
