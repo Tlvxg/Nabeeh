@@ -13,13 +13,6 @@ Saudi stock risk analysis platform.
 │  │  /, /login, /register, /dashboard, /search,              │   │
 │  │  /stock/:symbol, /news, /chat, /settings, /upgrade       │   │
 │  └──────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  ┌──────────────────────────────────────────────────────────┐   │
-│  │  Serverless Functions (api/)                             │   │
-│  │   chat.py    AI chat proxy (DeepSeek via OpenRouter)     │   │
-│  │   tasi.py    TASI index real-time (yfinance)             │   │
-│  │   health.py  Health check                                │   │
-│  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
             │                                │
             │  Supabase JS SDK               │  REST API
