@@ -56,7 +56,7 @@ The system is split across three managed platforms. The React frontend lives on 
                                      └────────────────────┘
 ```
 
-The backend is organised into seven modules under `backend/app/modules/`. Five of them — prices, risk, news, sentiment, and assistant — expose HTTP routers. The remaining two — alerts and notes — are internal services that the scheduler invokes during the daily pipeline. The complete sequence diagram of how data flows through these modules each day is documented in [ARCHITECTURE.md](ARCHITECTURE.md).
+The backend is organised into seven modules under `backend/app/modules/`. Five of them — prices, risk, news, sentiment, and assistant — expose HTTP routers. The remaining two — alerts and notes — are internal services that the scheduler invokes during the daily pipeline.
 
 ## Tech stack
 
@@ -75,12 +75,6 @@ The backend is organised into seven modules under `backend/app/modules/`. Five o
 | Email | Resend (RFC-5322 threaded alerts) |
 | Scheduler | APScheduler |
 | Hosting | Vercel (frontend) + Railway (backend) |
-
-## Documentation
-
-For the full sequence diagram of the daily pipeline, the database schema, the API reference, the AI note validation rules, and the email threading scheme, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
-
-For a folder-by-folder map of the backend modules, the React pages and components, the hooks and services, the SQL migrations, and the scripts, see **[catalog.md](catalog.md)**.
 
 ## Authorship
 
