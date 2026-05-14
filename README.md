@@ -8,7 +8,7 @@ The system currently covers four large-cap Tadawul stocks — Saudi Aramco (2222
 
 - **Composite risk score (0–100)** per stock, recomputed every trading day.
 - **Arabic news sentiment** using MARBERTv2 on ONNX Runtime, scoring articles from Argaam RSS feeds and company news pages.
-- **Daily quantitative pipeline** that computes VaR (95% and 99%), CVaR, GARCH(1,1), 10,000-path Monte Carlo simulation, Sharpe and Sortino ratios, max drawdown, beta against TASI, and pivot levels.
+- **Daily quantitative pipeline** that computes VaR (95% and 99%), 10,000-path Monte Carlo simulation, Sharpe and Sortino ratios, max drawdown, beta against TASI, and pivot levels.
 - **AI-generated Arabic risk explanations** via DeepSeek-v4-pro, with strict validation (Arabic ratio, numeric grounding, banned-token filter) and a rule-based fallback so the user never sees a bad note.
 - **Threaded email alerts** when the risk score moves enough to matter, using deterministic RFC-5322 Message-IDs so successive updates collapse into one Gmail thread per stock.
 - **Arabic AI chat assistant** that answers questions about a specific stock, enriched with current price, risk, and sentiment context.
