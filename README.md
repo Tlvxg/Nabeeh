@@ -1,8 +1,22 @@
 # Nabeeh (نبيه)
 
-Saudi stock risk analysis platform.
+Nabeeh is a Saudi stock risk analysis platform built for the Tadawul market. It combines classical financial risk models — Value at Risk, GARCH, Monte Carlo, volatility, and beta — with Arabic news sentiment analysis to produce a single risk score per stock. The dashboard is Arabic-first and uses right-to-left layout throughout, so beginner investors can read a clear explanation of risk in their own language instead of decoding English financial metrics.
 
-## How it works
+The system currently covers four large-cap Tadawul stocks — Saudi Aramco (2222), SABIC (2010), Al Rajhi Bank (1120), and STC (7010) — plus the TASI index for beta calculation.
+
+## Features
+
+- **Composite risk score (0–100)** per stock, recomputed every trading day.
+- **Arabic news sentiment** using MARBERTv2 on ONNX Runtime, scoring articles from Argaam RSS feeds and company news pages.
+- **Daily quantitative pipeline** that computes VaR (95% and 99%), CVaR, GARCH(1,1), 10,000-path Monte Carlo simulation, Sharpe and Sortino ratios, max drawdown, beta against TASI, and pivot levels.
+- **AI-generated Arabic risk explanations** via DeepSeek-v4-pro, with strict validation (Arabic ratio, numeric grounding, banned-token filter) and a rule-based fallback so the user never sees a bad note.
+- **Threaded email alerts** when the risk score moves enough to matter, using deterministic RFC-5322 Message-IDs so successive updates collapse into one Gmail thread per stock.
+- **Arabic AI chat assistant** that answers questions about a specific stock, enriched with current price, risk, and sentiment context.
+- **Authenticated user accounts** with free and premium tiers, watchlists, and a search history.
+
+## Architecture
+
+The system is split across three managed platforms. The React frontend lives on Vercel and reads market data straight from Supabase using the JS SDK and a public anonymous key, with Row-Level Security policies controlling what each user can see. The FastAPI backend runs in a Docker container on Railway and is the only component that writes to the database. A scheduler inside the backend runs the daily pipeline at fixed times aligned to the Tadawul trading calendar. External services — Yahoo Finance for prices, Argaam for news, OpenRouter for AI, and Resend for email — are all called from the backend, never from the browser.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -42,17 +56,7 @@ Saudi stock risk analysis platform.
                                      └────────────────────┘
 ```
 
-**Daily pipeline (Tadawul calendar, UTC):**
-
-```
-12:30 ──▶ fetch_prices         (yfinance → daily_prices)
-12:35 ──▶ compute_stats        (daily_prices → stock_stats)
-12:40 ──▶ compute_risk         (stats + sentiment → risk_metrics)
-       │                        ──▶ DeepSeek note → risk_notes
-       └──▶ alert if Δscore≥5  ──▶ Resend → sent_alerts
-
-every 30 min ──▶ news_pipeline (Argaam → news_articles → MARBERT → sentiment_scores)
-```
+The backend is organised into seven modules under `backend/app/modules/`. Five of them — prices, risk, news, sentiment, and assistant — expose HTTP routers. The remaining two — alerts and notes — are internal services that the scheduler invokes during the daily pipeline. The complete sequence diagram of how data flows through these modules each day is documented in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Tech stack
 
@@ -72,9 +76,12 @@ every 30 min ──▶ news_pipeline (Argaam → news_articles → MARBERT → s
 | Scheduler | APScheduler |
 | Hosting | Vercel (frontend) + Railway (backend) |
 
-## More
+## Documentation
 
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** — sequence diagram with step-by-step explanation, full database schema, API endpoints, scheduler jobs, AI note flow, email threading.
-- **[catalog.md](catalog.md)** — folder-by-folder code map.
+For the full sequence diagram of the daily pipeline, the database schema, the API reference, the AI note validation rules, and the email threading scheme, see **[ARCHITECTURE.md](ARCHITECTURE.md)**.
 
-Graduation project (GP2).
+For a folder-by-folder map of the backend modules, the React pages and components, the hooks and services, the SQL migrations, and the scripts, see **[catalog.md](catalog.md)**.
+
+## Authorship
+
+Graduation project (GP2). All code authored by the project team. External libraries are used under their respective licenses (see `backend/requirements.txt` and `dashboard/package.json`).
